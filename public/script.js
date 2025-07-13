@@ -1,6 +1,6 @@
 const auth = firebase.auth();
 const firestore = firebase.firestore();
-const ai = firebase.vertexAI();
+const functions = firebase.functions();
 
 const loginButton = document.getElementById('login-button');
 const appContainer = document.getElementById('app-container');
@@ -54,9 +54,16 @@ generateButton.addEventListener('click', async () => {
 
   // Generate the project idea
   ideaContainer.textContent = 'Generating idea...';
-  const model = ai.getGenerativeModel({ model: 'gemini-pro' });
-  const ideaPrompt = `Generate a project idea based on this query: ${query}`;
-  const ideaResult = await model.generateContent(ideaPrompt);
-  const ideaResponse = await ideaResult.response;
-  ideaContainer.textContent = ideaResponse.text();
+  
+  try {
+    // Call the Cloud Function that handles the Gemini API
+    const generateIdea = functions.httpsCallable('generateIdea');
+    const result = await generateIdea({ query: query });
+    
+    // Display the result
+    ideaContainer.textContent = result.data.idea || 'Could not generate idea. Please try again.';
+  } catch (error) {
+    console.error('Error generating idea:', error);
+    ideaContainer.textContent = 'Error: ' + error.message;
+  }
 });

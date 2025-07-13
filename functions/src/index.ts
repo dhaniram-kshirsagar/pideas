@@ -8,8 +8,11 @@
  */
 
 import {setGlobalOptions} from "firebase-functions";
-import {onRequest} from "firebase-functions/https";
+import {onCall} from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
+// Import as a require to avoid TypeScript errors
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const {GoogleGenerativeAI} = require('@genkit-ai/googleai');
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
@@ -26,7 +29,46 @@ import * as logger from "firebase-functions/logger";
 // this will be the maximum concurrent request count.
 setGlobalOptions({ maxInstances: 10 });
 
-// export const helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+// Initialize Gemini API client
+// You will need to set the GEMINI_API_KEY in your Firebase functions config
+// You'll need to set this API key in Firebase config using:
+// firebase functions:config:set gemini.key="YOUR_API_KEY"
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+
+/**
+ * Cloud Function that generates project ideas using Google's Gemini AI model
+ */
+export const generateIdea = onCall({maxInstances: 5}, async (request: any) => {
+  try {
+    const query = request.data.query;
+    
+    if (!query || typeof query !== "string") {
+      throw new Error("Invalid query parameter");
+    }
+
+    logger.info("Generating idea for query:", query);
+
+    // Initialize the Gemini model
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+    // Generate content using the Gemini model
+    const prompt = `Generate a project idea based on this query: ${query}. 
+    Make it detailed, creative and practical. Include possible technologies 
+    to implement it with and a brief overview of the project structure.`;
+    
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    logger.info("Successfully generated idea");
+
+    // Return the generated idea
+    return {
+      success: true,
+      idea: text,
+    };
+  } catch (error) {
+    logger.error("Error generating idea:", error);
+    throw new Error(`Failed to generate idea: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+});
