@@ -10,9 +10,9 @@
 import {setGlobalOptions} from "firebase-functions";
 import {onCall} from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
-// Import as a require to avoid TypeScript errors
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const {GoogleGenerativeAI} = require('@genkit-ai/googleai');
+// Import genkit and googleAI plugin
+import { genkit } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
@@ -33,7 +33,6 @@ setGlobalOptions({ maxInstances: 10 });
 // You will need to set the GEMINI_API_KEY in your Firebase functions config
 // You'll need to set this API key in Firebase config using:
 // firebase functions:config:set gemini.key="YOUR_API_KEY"
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 /**
  * Cloud Function that generates project ideas using Google's Gemini AI model
@@ -48,17 +47,20 @@ export const generateIdea = onCall({maxInstances: 5}, async (request: any) => {
 
     logger.info("Generating idea for query:", query);
 
-    // Initialize the Gemini model
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
     // Generate content using the Gemini model
     const prompt = `Generate a project idea based on this query: ${query}. 
     Make it detailed, creative and practical. Include possible technologies 
     to implement it with and a brief overview of the project structure.`;
     
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    // Using the gemini model with genkit
+    const ai = genkit({
+      plugins: [googleAI({
+        apiKey: process.env.GEMINI_API_KEY || ""
+      })],
+      model: googleAI.model('gemini-2.5-flash'),
+    });
+    
+    const { text } = await ai.generate(prompt);
     
     logger.info("Successfully generated idea");
 
