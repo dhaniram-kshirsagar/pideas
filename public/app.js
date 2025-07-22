@@ -152,9 +152,19 @@ const GameStep = ({ step, onAnswer, currentScore, totalSteps }) => {
     const [selectedOption, setSelectedOption] = useState('');
     const [showResult, setShowResult] = useState(false);
 
+    // Reset state when step changes
+    useEffect(() => {
+        setSelectedOption('');
+        setShowResult(false);
+    }, [step.stepId]);
+
     const handleSubmit = () => {
-        if (!selectedOption) return;
+        if (!selectedOption) {
+            console.log('No option selected, cannot submit');
+            return;
+        }
         
+        console.log('Submitting answer:', selectedOption);
         setShowResult(true);
         setTimeout(() => {
             onAnswer({
@@ -165,6 +175,11 @@ const GameStep = ({ step, onAnswer, currentScore, totalSteps }) => {
                 points: step.points
             });
         }, 1500);
+    };
+
+    const handleOptionClick = (option) => {
+        console.log('Option clicked:', option);
+        setSelectedOption(option);
     };
 
     return (
@@ -189,7 +204,7 @@ const GameStep = ({ step, onAnswer, currentScore, totalSteps }) => {
                     {step.options.map((option, index) => (
                         <button
                             key={index}
-                            onClick={() => setSelectedOption(option)}
+                            onClick={() => handleOptionClick(option)}
                             className={`w-full text-left p-4 rounded-lg border transition-all duration-200 ${
                                 selectedOption === option
                                     ? 'border-blue-500 bg-blue-500/20 text-blue-300'
@@ -218,6 +233,11 @@ const GameStep = ({ step, onAnswer, currentScore, totalSteps }) => {
                 >
                     {showResult ? 'Moving to next step...' : 'Continue'}
                 </button>
+                
+                {/* Debug info */}
+                <div className="mt-2 text-xs text-gray-500 text-center">
+                    Debug: Selected="{selectedOption}", ShowResult={showResult.toString()}, ButtonEnabled={(!selectedOption || showResult) ? 'false' : 'true'}
+                </div>
             </div>
         </div>
     );
