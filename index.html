@@ -4,14 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Idea Generator</title>
-    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body { margin: 0; overflow-x: hidden; }
+      html, body, #root { height: 100%; }
+    </style>
 </head>
 <body>
-
-    <h1>Project Idea Generator</h1>
-
-    <!-- Content will be added here by the script -->
-
-    <script src="script.js"></script>
+    <div id="root"></div>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-functions-compat.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script src="./public/firebase-config.js"></script>
+    
+    <!-- React Development Scripts -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Main App Script -->
+    <script type="text/babel" src="./src/main-compiled.js"></script>
 </body>
 </html>

@@ -1,0 +1,29 @@
+{
+  "name": "pideas",
+  "version": "1.0.0",
+  "description": "Get started by customizing your environment (defined in the .idx/dev.nix file) with the tools and IDE extensions you'll need for your project!",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "react-scripts build",
+    "start": "react-scripts start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dhaniram-kshirsagar/pideas.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dhaniram-kshirsagar/pideas/issues"
+  },
+  "homepage": "https://github.com/dhaniram-kshirsagar/pideas#readme",
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "react-scripts": "^5.0.1"
+  }
+}
