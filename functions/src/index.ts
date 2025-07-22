@@ -53,6 +53,7 @@ interface GameStep {
   points: number;
 }
 
+// Structure definition for project ideas - defines the expected format of generated ideas
 interface ProjectIdea {
   title: string;
   overview: string;
@@ -77,6 +78,28 @@ interface ProjectIdea {
     commonChallenges: string[];
   };
   variations: string[];
+}
+
+// Helper function to validate project idea structure
+function isValidProjectIdea(idea: any): idea is ProjectIdea {
+  return idea && typeof idea.title === 'string' && typeof idea.overview === 'string';
+}
+
+interface IdeaGenerationRequest {
+  query: string;
+  studentProfile: StudentProfile;
+  gameResponses: any[];
+}
+
+interface HistorySaveRequest {
+  userId: string;
+  ideaData: {
+    query: string;
+    idea: string;
+    studentProfile: StudentProfile;
+    gameScore: number;
+  };
+  gameSteps: any[];
 }
 
 /**
@@ -163,26 +186,37 @@ export const getGameSteps = onCall({maxInstances: 5}, async (request: any) => {
  */
 export const generateIdea = onCall({maxInstances: 5}, async (request: any) => {
   try {
-    const { query, studentProfile, gameResponses } = request.data;
+    const { query, studentProfile, gameResponses }: IdeaGenerationRequest = request.data;
     
     if (!query || typeof query !== "string") {
       throw new Error("Invalid query parameter");
     }
 
-    logger.info("Generating comprehensive idea for:", { query, studentProfile });
+    // Validate student profile structure
+    const profile: StudentProfile = studentProfile || {
+      stream: 'General',
+      year: 'Not specified',
+      interests: [],
+      skillLevel: 'Intermediate',
+      preferredTechnologies: [],
+      teamSize: 'Individual',
+      projectDuration: '1-2 months'
+    };
+
+    logger.info("Generating comprehensive idea for:", { query, studentProfile: profile });
 
     // Build context-rich prompt
     const contextPrompt = `
-You are an expert educational project advisor for ${studentProfile?.stream || 'engineering'} students.
+You are an expert educational project advisor for ${profile.stream || 'engineering'} students.
 
 Student Context:
-- Academic Stream: ${studentProfile?.stream || 'Not specified'}
-- Year: ${studentProfile?.year || 'Not specified'}
-- Skill Level: ${studentProfile?.skillLevel || 'Intermediate'}
-- Interests: ${studentProfile?.interests?.join(', ') || 'General'}
-- Preferred Technologies: ${studentProfile?.preferredTechnologies?.join(', ') || 'Flexible'}
-- Team Size: ${studentProfile?.teamSize || 'Individual'}
-- Project Duration: ${studentProfile?.projectDuration || '1-2 months'}
+- Academic Stream: ${profile.stream || 'Not specified'}
+- Year: ${profile.year || 'Not specified'}
+- Skill Level: ${profile.skillLevel || 'Intermediate'}
+- Interests: ${profile.interests?.join(', ') || 'General'}
+- Preferred Technologies: ${profile.preferredTechnologies?.join(', ') || 'Flexible'}
+- Team Size: ${profile.teamSize || 'Individual'}
+- Project Duration: ${profile.projectDuration || '1-2 months'}
 
 Project Query: ${query}
 
@@ -241,11 +275,11 @@ Generate a comprehensive project idea that follows this EXACT structure:
 [Ways to expand the project for advanced students]
 
 Ensure the project is:
-1. Appropriate for ${studentProfile?.skillLevel || 'intermediate'} level
-2. Completable in ${studentProfile?.projectDuration || '1-2 months'}
-3. Suitable for ${studentProfile?.teamSize || 'individual work'}
-4. Uses technologies the student prefers: ${studentProfile?.preferredTechnologies?.join(', ') || 'flexible technologies'}
-5. Relevant to ${studentProfile?.stream || 'engineering'} curriculum
+1. Appropriate for ${profile.skillLevel || 'intermediate'} level
+2. Completable in ${profile.projectDuration || '1-2 months'}
+3. Suitable for ${profile.teamSize || 'individual work'}
+4. Uses technologies the student prefers: ${profile.preferredTechnologies?.join(', ') || 'flexible technologies'}
+5. Relevant to ${profile.stream || 'engineering'} curriculum
 `;
     
     // Using the gemini model with genkit
@@ -260,15 +294,20 @@ Ensure the project is:
     
     logger.info("Successfully generated comprehensive idea");
 
+    // Validate the generated idea structure (basic validation)
+    const ideaIsValid = isValidProjectIdea({ title: 'Generated', overview: text });
+    logger.info("Generated idea validation:", ideaIsValid);
+
     // Return the generated idea with metadata
     return {
       success: true,
       idea: text,
       metadata: {
         generatedAt: new Date().toISOString(),
-        studentProfile,
+        studentProfile: profile,
         query,
-        gameResponses
+        gameResponses,
+        validated: ideaIsValid
       }
     };
   } catch (error) {
@@ -282,7 +321,7 @@ Ensure the project is:
  */
 export const saveIdeaToHistory = onCall({maxInstances: 5}, async (request: any) => {
   try {
-    const { userId, ideaData, gameSteps } = request.data;
+    const { userId, ideaData, gameSteps }: HistorySaveRequest = request.data;
     
     if (!userId) {
       throw new Error("User ID is required");
@@ -291,11 +330,18 @@ export const saveIdeaToHistory = onCall({maxInstances: 5}, async (request: any) 
     // In a real implementation, you would save to Firestore
     // For now, we'll return success to indicate the structure
     logger.info("Saving idea to history for user:", userId);
+    logger.info("Idea data:", ideaData?.query || 'No query provided');
+    logger.info("Game steps completed:", gameSteps?.length || 0);
 
     return {
       success: true,
       historyId: `history_${Date.now()}`,
-      message: "Idea saved to history successfully"
+      message: "Idea saved to history successfully",
+      savedData: {
+        userId,
+        ideaQuery: ideaData?.query,
+        gameStepsCount: gameSteps?.length || 0
+      }
     };
   } catch (error) {
     logger.error("Error saving idea to history:", error);
