@@ -242,28 +242,17 @@ const GameStep = ({ step, onAnswer, currentScore, totalSteps }) => {
 };
 
 // Project Idea Display Component
-const ProjectIdeaDisplay = ({ idea, onSaveToHistory, onStartNew }) => {
-    const [isSaving, setIsSaving] = useState(false);
-
-    const handleSave = async () => {
-        setIsSaving(true);
-        await onSaveToHistory();
-        setIsSaving(false);
-    };
-
+const ProjectIdeaDisplay = ({ idea, onStartNew }) => {
     return (
         <div className="max-w-4xl mx-auto">
             <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-6">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-2xl font-semibold text-white">Your Personalized Project Idea</h3>
                     <div className="flex gap-3">
-                        <button
-                            onClick={handleSave}
-                            disabled={isSaving}
-                            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                        >
-                            {isSaving ? 'Saving...' : 'Save to History'}
-                        </button>
+                        <div className="bg-green-600/20 border border-green-600 text-green-400 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
+                            <span>✓</span>
+                            <span>Automatically Saved</span>
+                        </div>
                         <button
                             onClick={onStartNew}
                             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
@@ -358,18 +347,44 @@ const HistoryView = ({ user, onBack }) => {
 
 // Main App Screen Component
 const AppScreen = ({ user, onLogout }) => {
-    const [currentView, setCurrentView] = useState('welcome'); // welcome, game, generating, result, history
+    const [currentView, setCurrentView] = useState('welcome');
     const [query, setQuery] = useState('');
     const [gameSteps, setGameSteps] = useState([]);
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [gameResponses, setGameResponses] = useState([]);
     const [currentScore, setCurrentScore] = useState(0);
     const [studentProfile, setStudentProfile] = useState({});
-    const [isGenerating, setIsGenerating] = useState(false);
     const [generatedIdea, setGeneratedIdea] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [userHistory, setUserHistory] = useState([]);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
     const functions = typeof firebase !== 'undefined' ? firebase.functions() : null;
     const firestore = typeof firebase !== 'undefined' ? firebase.firestore() : null;
+
+    // Load user history function
+    const loadUserHistory = async () => {
+        if (!functions) return;
+        
+        setIsLoadingHistory(true);
+        try {
+            const getUserHistory = functions.httpsCallable('getUserHistory');
+            const result = await getUserHistory({ userId: user.uid });
+            
+            if (result.data.success) {
+                setUserHistory(result.data.history);
+            }
+        } catch (error) {
+            console.error('Error loading history:', error);
+        } finally {
+            setIsLoadingHistory(false);
+        }
+    };
+
+    // Load history on component mount
+    useEffect(() => {
+        loadUserHistory();
+    }, [user]);
 
     const startGameFlow = async () => {
         if (!functions) {
@@ -445,6 +460,28 @@ const AppScreen = ({ user, onLogout }) => {
             if (result.data.success) {
                 setGeneratedIdea(result.data.idea);
                 setCurrentView('result');
+                
+                // Automatically save to history
+                try {
+                    const saveIdeaToHistory = functions.httpsCallable('saveIdeaToHistory');
+                    await saveIdeaToHistory({
+                        userId: user.uid,
+                        ideaData: {
+                            query,
+                            idea: result.data.idea,
+                            studentProfile: profile,
+                            gameScore: currentScore
+                        },
+                        gameSteps: responses
+                    });
+                    console.log('Idea automatically saved to history');
+                    
+                    // Refresh history after saving
+                    loadUserHistory();
+                } catch (historyError) {
+                    console.error('Error auto-saving to history:', historyError);
+                    // Don't show error to user as this is automatic
+                }
                 
                 // Save to user profile
                 if (firestore) {
@@ -563,6 +600,52 @@ const AppScreen = ({ user, onLogout }) => {
                                 <p>Answer 7 fun questions to get a perfectly tailored project idea!</p>
                             </div>
                         </div>
+                        
+                        {/* History Section */}
+                        <div className="mt-12">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-2xl font-bold text-white">Your Recent Project Ideas</h3>
+                                <span className="text-gray-400 text-sm">{userHistory.length} ideas generated</span>
+                            </div>
+                            
+                            {isLoadingHistory ? (
+                                <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-8 text-center">
+                                    <div className="text-gray-400">Loading your project history...</div>
+                                </div>
+                            ) : userHistory.length === 0 ? (
+                                <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-8 text-center">
+                                    <p className="text-gray-400">No project ideas generated yet. Start your first gamified session above!</p>
+                                </div>
+                            ) : (
+                                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                    {userHistory.slice(0, 6).map((item) => (
+                                        <div key={item.id} className="bg-gray-800/30 border border-gray-700 rounded-lg p-4 hover:bg-gray-800/50 transition-colors">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h4 className="text-lg font-semibold text-white truncate">{item.query}</h4>
+                                                <span className="text-green-400 font-medium text-sm ml-2">Score: {item.gameScore}</span>
+                                            </div>
+                                            <div className="text-sm text-gray-400 mb-2">
+                                                {item.studentProfile.stream} • {item.studentProfile.skillLevel}
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                                {new Date(item.generatedAt).toLocaleDateString()}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            
+                            {userHistory.length > 6 && (
+                                <div className="text-center mt-4">
+                                    <button
+                                        onClick={() => setCurrentView('history')}
+                                        className="text-blue-400 hover:text-blue-300 transition-colors"
+                                    >
+                                        View all {userHistory.length} ideas →
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 
@@ -592,7 +675,6 @@ const AppScreen = ({ user, onLogout }) => {
                 {currentView === 'result' && generatedIdea && (
                     <ProjectIdeaDisplay
                         idea={generatedIdea}
-                        onSaveToHistory={saveToHistory}
                         onStartNew={startNewIdea}
                     />
                 )}
