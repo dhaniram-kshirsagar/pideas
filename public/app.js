@@ -122,13 +122,13 @@ const LoginScreen = ({ onLogin, isLoading }) => {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center relative bg-black">
             {/* Move the logo up by adding a negative margin-bottom */}
-            <div className="mb-[-60px] w-full">
+            <div className="mb-[-100px] w-full">
                 <InteractiveLogo />
             </div>
             {/* Add more top margin to push the content down and away from the logo */}
-            <div className="content text-center z-10 mt-[120px]">
+            <div className="content text-center z-10 mt-[200px]">
                 <div className="mb-8">
-                    <p className="text-gray-400 text-lg mt-8">
+                    <p className="text-gray-400 text-lg mt-16">
                         Add Google login to your app in minutes
                     </p>
                 </div>
