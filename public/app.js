@@ -127,11 +127,7 @@ const LoginScreen = ({ onLogin, isLoading }) => {
             </div>
             {/* Add more top margin to push the content down and away from the logo */}
             <div className="content text-center z-10 mt-[200px]">
-                <div className="mb-8">
-                    <p className="text-gray-400 text-lg mt-16">
-                        Add Google login to your app in minutes
-                    </p>
-                </div>
+                {/* Text removed as requested */}
                 
                 <button
                     onClick={onLogin}
