@@ -120,15 +120,13 @@ const ParticleSystem = () => {
 // Login Screen Component
 const LoginScreen = ({ onLogin, isLoading }) => {
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center relative bg-black">
-            {/* Move the logo up by adding a negative margin-bottom */}
-            <div className="mb-[-100px] w-full">
+        <div className="min-h-screen flex flex-col relative bg-black">
+            {/* Logo positioned in upper portion */}
+            <div className="flex-1 flex items-center justify-center">
                 <InteractiveLogo />
             </div>
-            {/* Add more top margin to push the content down and away from the logo */}
-            <div className="content text-center z-10 mt-[200px]">
-                {/* Text removed as requested */}
-                
+            {/* Login button positioned in lower portion */}
+            <div className="content text-center z-10 pb-20">
                 <button
                     onClick={onLogin}
                     disabled={isLoading}
