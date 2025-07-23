@@ -8,8 +8,9 @@
  */
 
 import {setGlobalOptions} from "firebase-functions";
-import {onCall} from "firebase-functions/v2/https";
-import * as logger from "firebase-functions/logger";
+import { onCall } from "firebase-functions/v2/https";
+import { logger } from "firebase-functions";
+import * as functions from "firebase-functions";
 // Import genkit and googleAI plugin
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
@@ -184,7 +185,7 @@ export const getGameSteps = onCall({maxInstances: 5}, async (request: any) => {
 /**
  * Generate comprehensive project idea based on gamified context
  */
-export const generateIdea = onCall({maxInstances: 5}, async (request: any) => {
+export const generateIdea = onCall({maxInstances: 5, timeoutSeconds: 300}, async (request: any) => {
   try {
     const { query, studentProfile, gameResponses }: IdeaGenerationRequest = request.data;
     
@@ -283,9 +284,16 @@ Ensure the project is:
 `;
     
     // Using the gemini model with genkit
+    const apiKey = functions.config().gemini?.key;
+    if (!apiKey) {
+      logger.error("Missing Gemini API key in Firebase config");
+      throw new Error("Missing API key configuration. Please set gemini.key in Firebase config.");
+    }
+    
+    logger.info("Using Gemini API with configured key");
     const ai = genkit({
       plugins: [googleAI({
-        apiKey: process.env.GEMINI_API_KEY || ""
+        apiKey: apiKey
       })],
       model: googleAI.model('gemini-2.5-flash'),
     });
