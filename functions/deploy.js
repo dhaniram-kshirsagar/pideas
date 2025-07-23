@@ -32,9 +32,10 @@ fs.writeFileSync(
 console.log('🔑 Created .runtimeconfig.json for local development');
 
 try {
-  // Set Firebase config
-  console.log('🔧 Setting Gemini API key in Firebase config...');
-  execSync(`firebase functions:config:set gemini.key="${GEMINI_API_KEY}"`, { stdio: 'inherit' });
+  // Set Firebase environment variables
+  console.log('🔧 Setting Gemini API key as environment variable...');
+  execSync(`firebase functions:config:unset gemini`, { stdio: 'inherit' });
+  execSync(`firebase functions:secrets:set GEMINI_API_KEY "${GEMINI_API_KEY}"`, { stdio: 'inherit' });
   
   // Build TypeScript functions
   console.log('🏗️ Building TypeScript functions...');

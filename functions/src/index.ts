@@ -10,7 +10,6 @@
 import {setGlobalOptions} from "firebase-functions";
 import { onCall } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions";
-import * as functions from "firebase-functions";
 // Import genkit and googleAI plugin
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
@@ -284,10 +283,10 @@ Ensure the project is:
 `;
     
     // Using the gemini model with genkit
-    const apiKey = functions.config().gemini?.key;
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      logger.error("Missing Gemini API key in Firebase config");
-      throw new Error("Missing API key configuration. Please set gemini.key in Firebase config.");
+      logger.error("Missing Gemini API key in environment variables");
+      throw new Error("Missing API key configuration. Please set GEMINI_API_KEY in environment variables.");
     }
     
     logger.info("Using Gemini API with configured key");
