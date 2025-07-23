@@ -270,7 +270,7 @@ const ProjectIdeaDisplay = ({ idea, onStartNew }) => {
 };
 
 // History Component
-const HistoryView = ({ user, onBack }) => {
+const HistoryView = ({ user, onBack, onViewIdea }) => {
     const [history, setHistory] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -326,7 +326,11 @@ const HistoryView = ({ user, onBack }) => {
             ) : (
                 <div className="space-y-4">
                     {history.map((item) => (
-                        <div key={item.id} className="bg-gray-800/30 border border-gray-700 rounded-lg p-4">
+                        <div 
+                            key={item.id} 
+                            className="bg-gray-800/30 border border-gray-700 rounded-lg p-4 hover:bg-gray-800/50 transition-colors cursor-pointer"
+                            onClick={() => onViewIdea(item.idea)}
+                        >
                             <div className="flex justify-between items-start mb-2">
                                 <h3 className="text-lg font-semibold text-white">{item.query}</h3>
                                 <span className="text-green-400 font-medium">Score: {item.gameScore}</span>
@@ -334,8 +338,11 @@ const HistoryView = ({ user, onBack }) => {
                             <div className="text-sm text-gray-400 mb-2">
                                 {item.studentProfile.stream} • {item.studentProfile.year} • {item.studentProfile.skillLevel}
                             </div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-500 mb-2">
                                 Generated on {new Date(item.generatedAt).toLocaleDateString()}
+                            </div>
+                            <div className="text-xs text-blue-400">
+                                Click to view full idea →
                             </div>
                         </div>
                     ))}
@@ -631,7 +638,14 @@ const AppScreen = ({ user, onLogout }) => {
                             ) : (
                                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                                     {userHistory.slice(0, 6).map((item) => (
-                                        <div key={item.id} className="bg-gray-800/30 border border-gray-700 rounded-lg p-4 hover:bg-gray-800/50 transition-colors">
+                                        <div 
+                                            key={item.id} 
+                                            className="bg-gray-800/30 border border-gray-700 rounded-lg p-4 hover:bg-gray-800/50 transition-colors cursor-pointer"
+                                            onClick={() => {
+                                                setGeneratedIdea(item.idea);
+                                                setCurrentView('result');
+                                            }}
+                                        >
                                             <div className="flex justify-between items-start mb-2">
                                                 <h4 className="text-lg font-semibold text-white truncate">{item.query}</h4>
                                                 <span className="text-green-400 font-medium text-sm ml-2">Score: {item.gameScore}</span>
@@ -639,8 +653,11 @@ const AppScreen = ({ user, onLogout }) => {
                                             <div className="text-sm text-gray-400 mb-2">
                                                 {item.studentProfile.stream} • {item.studentProfile.skillLevel}
                                             </div>
-                                            <div className="text-xs text-gray-500">
+                                            <div className="text-xs text-gray-500 mb-2">
                                                 {new Date(item.generatedAt).toLocaleDateString()}
+                                            </div>
+                                            <div className="text-xs text-blue-400">
+                                                Click to view full idea →
                                             </div>
                                         </div>
                                     ))}
@@ -695,6 +712,10 @@ const AppScreen = ({ user, onLogout }) => {
                     <HistoryView
                         user={user}
                         onBack={() => setCurrentView('welcome')}
+                        onViewIdea={(idea) => {
+                            setGeneratedIdea(idea);
+                            setCurrentView('result');
+                        }}
                     />
                 )}
             </main>
