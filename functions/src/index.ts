@@ -10,9 +10,14 @@
 import {setGlobalOptions} from "firebase-functions";
 import { onCall } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions";
+// Import Firebase admin SDK
+import * as admin from "firebase-admin";
 // Import genkit and googleAI plugin
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
+
+// Initialize Firebase admin
+admin.initializeApp();
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
@@ -359,15 +364,38 @@ export const saveIdeaToHistory = onCall({maxInstances: 5}, async (request: any) 
       throw new Error("User ID is required");
     }
 
-    // In a real implementation, you would save to Firestore
-    // For now, we'll return success to indicate the structure
+    // Create a new history document in Firestore
+    const historyId = `history_${Date.now()}`;
+    const timestamp = new Date().toISOString();
+    
+    // Prepare data for Firestore
+    const historyData = {
+      id: historyId,
+      userId: userId,
+      query: ideaData?.query || '',
+      idea: ideaData?.idea || '',
+      studentProfile: ideaData?.studentProfile || {},
+      gameScore: ideaData?.gameScore || 0,
+      gameStepsCount: gameSteps?.length || 0,
+      generatedAt: timestamp
+    };
+    
     logger.info("Saving idea to history for user:", userId);
-    logger.info("Idea data:", ideaData?.query || 'No query provided');
-    logger.info("Game steps completed:", gameSteps?.length || 0);
+    
+    // Save to Firestore
+    const db = admin.firestore();
+    await db.collection('projectHistory').doc(historyId).set(historyData);
+    
+    // Also update the user document with a reference to their latest idea
+    await db.collection('users').doc(userId).set({
+      lastHistoryId: historyId,
+      lastGeneratedAt: timestamp,
+      totalIdeasGenerated: admin.firestore.FieldValue.increment(1)
+    }, { merge: true });
 
     return {
       success: true,
-      historyId: `history_${Date.now()}`,
+      historyId: historyId,
       message: "Idea saved to history successfully",
       savedData: {
         userId,
@@ -394,24 +422,32 @@ export const getUserHistory = onCall({maxInstances: 5}, async (request: any) => 
 
     logger.info("Getting history for user:", userId);
 
-    // In a real implementation, you would fetch from Firestore
-    // For now, return a sample structure
+    // Fetch from Firestore
+    const db = admin.firestore();
+    const historySnapshot = await db.collection('projectHistory')
+      .where('userId', '==', userId)
+      .orderBy('generatedAt', 'desc')
+      .limit(50) // Limit to most recent 50 items
+      .get();
+    
+    // Transform data
+    const historyItems: Array<any> = [];
+    historySnapshot.forEach((doc: admin.firestore.QueryDocumentSnapshot) => {
+      historyItems.push(doc.data());
+    });
+    
+    // Get user stats
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.exists ? userDoc.data() : {};
+    
     return {
       success: true,
-      history: [
-        {
-          id: "sample_1",
-          query: "Sample project query",
-          generatedAt: new Date().toISOString(),
-          gameScore: 85,
-          studentProfile: {
-            stream: "Computer Science",
-            year: "3rd Year",
-            skillLevel: "Intermediate"
-          }
-        }
-      ],
-      totalProjects: 1
+      history: historyItems as Array<any>,
+      totalProjects: historyItems.length,
+      userStats: {
+        totalIdeasGenerated: (userData && userData.totalIdeasGenerated) || historyItems.length,
+        lastGeneratedAt: (userData && userData.lastGeneratedAt) || null
+      }
     };
   } catch (error) {
     logger.error("Error getting user history:", error);
