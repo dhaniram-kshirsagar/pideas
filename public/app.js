@@ -1,5 +1,8 @@
 const { useState, useEffect, useRef } = React;
 
+// Import the InteractiveLogo component
+// InteractiveLogo.js must be loaded before this script
+
 // Particle system for background effect
 const ParticleSystem = () => {
     const canvasRef = useRef(null);
@@ -117,14 +120,11 @@ const ParticleSystem = () => {
 // Login Screen Component
 const LoginScreen = ({ onLogin, isLoading }) => {
     return (
-        <div className="min-h-screen flex items-center justify-center relative">
-            <div className="particle-text">Pideas</div>
+        <div className="min-h-screen flex items-center justify-center relative bg-black">
+            <InteractiveLogo />
             <div className="content text-center z-10">
                 <div className="mb-8">
-                    <h1 className="text-6xl md:text-8xl font-bold text-white mb-4 tracking-wider">
-                        Pideas
-                    </h1>
-                    <p className="text-gray-400 text-lg">
+                    <p className="text-gray-400 text-lg mt-8">
                         Add Google login to your app in minutes
                     </p>
                 </div>
