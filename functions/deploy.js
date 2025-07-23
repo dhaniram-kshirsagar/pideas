@@ -14,7 +14,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Gemini API Key - This will be used for deployment
-const GEMINI_API_KEY = "AIzaSyDUjnzrjkGat_c36-w1d2MOqpBwNBdcbqs";
+const GEMINI_API_KEY = "";
 
 // Create .runtimeconfig.json for local development
 const runtimeConfig = {
