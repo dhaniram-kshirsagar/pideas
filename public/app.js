@@ -463,8 +463,17 @@ const AppScreen = ({ user, onLogout }) => {
                 
                 // Automatically save to history
                 try {
+                    console.log('Attempting to auto-save idea to history for user:', user.uid);
+                    console.log('Idea data to save:', {
+                        query: query,
+                        ideaLength: result.data.idea ? result.data.idea.length : 0,
+                        profileSummary: profile,
+                        gameScore: currentScore,
+                        gameStepsCount: responses.length
+                    });
+                    
                     const saveIdeaToHistory = functions.httpsCallable('saveIdeaToHistory');
-                    await saveIdeaToHistory({
+                    const saveResult = await saveIdeaToHistory({
                         userId: user.uid,
                         ideaData: {
                             query,
@@ -474,10 +483,13 @@ const AppScreen = ({ user, onLogout }) => {
                         },
                         gameSteps: responses
                     });
-                    console.log('Idea automatically saved to history');
+                    
+                    console.log('Idea automatically saved to history with result:', saveResult.data);
                     
                     // Refresh history after saving
-                    loadUserHistory();
+                    console.log('Refreshing history data...');
+                    await loadUserHistory();
+                    console.log('History refreshed, current count:', userHistory.length);
                 } catch (historyError) {
                     console.error('Error auto-saving to history:', historyError);
                     // Don't show error to user as this is automatic
