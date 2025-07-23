@@ -34,8 +34,19 @@ console.log('🔑 Created .runtimeconfig.json for local development');
 try {
   // Set Firebase environment variables
   console.log('🔧 Setting Gemini API key as environment variable...');
-  execSync(`firebase functions:config:unset gemini`, { stdio: 'inherit' });
-  execSync(`firebase functions:secrets:set GEMINI_API_KEY "${GEMINI_API_KEY}"`, { stdio: 'inherit' });
+  // Create .env file for deployment
+  fs.writeFileSync(
+    path.join(__dirname, '.env'),
+    `GEMINI_API_KEY=${GEMINI_API_KEY}\n`
+  );
+  console.log('📄 Created .env file with Gemini API key');
+  
+  // Create or update .env.local file for local development
+  fs.writeFileSync(
+    path.join(__dirname, '.env.local'),
+    `GEMINI_API_KEY=${GEMINI_API_KEY}\n`
+  );
+  console.log('📄 Created .env.local file for local development');
   
   // Build TypeScript functions
   console.log('🏗️ Building TypeScript functions...');
