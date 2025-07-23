@@ -498,9 +498,12 @@ const AppScreen = ({ user, onLogout }) => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="min-h-screen flex flex-col bg-black relative">
+            {/* Add particle system background */}
+            <ParticleSystem />
+            
             {/* Header */}
-            <header className="bg-gray-900/50 backdrop-blur-sm border-b border-gray-800 p-4">
+            <header className="bg-black/50 backdrop-blur-sm border-b border-gray-800 p-4 relative z-10">
                 <div className="max-w-6xl mx-auto flex justify-between items-center">
                     <div className="flex items-center gap-4">
                         <h1 className="text-2xl font-bold text-white">Pideas</h1>
@@ -526,7 +529,7 @@ const AppScreen = ({ user, onLogout }) => {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col items-center justify-center p-8">
+            <main className="flex-1 flex flex-col items-center justify-center p-8 relative z-10">
                 {currentView === 'welcome' && (
                     <div className="w-full max-w-4xl">
                         <div className="text-center mb-8">
