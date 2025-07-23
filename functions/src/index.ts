@@ -291,33 +291,58 @@ Ensure the project is:
     }
     
     logger.info("Using Gemini API with configured key");
-    const ai = genkit({
-      plugins: [googleAI({
-        apiKey: apiKey
-      })],
+    
+    try {
+      const ai = genkit({
+        plugins: [googleAI({
+          apiKey: apiKey
+        })],
       model: googleAI.model('gemini-2.5-flash'),
-    });
-    
-    const { text } = await ai.generate(contextPrompt);
-    
-    logger.info("Successfully generated comprehensive idea");
-
-    // Validate the generated idea structure (basic validation)
-    const ideaIsValid = isValidProjectIdea({ title: 'Generated', overview: text });
-    logger.info("Generated idea validation:", ideaIsValid);
-
-    // Return the generated idea with metadata
-    return {
-      success: true,
-      idea: text,
-      metadata: {
-        generatedAt: new Date().toISOString(),
-        studentProfile: profile,
-        query,
-        gameResponses,
-        validated: ideaIsValid
+      });
+      
+      const { text } = await ai.generate(contextPrompt);
+      
+      if (!text || text.trim().length === 0) {
+        throw new Error("Generated text is empty");
       }
-    };
+      
+      logger.info("Successfully generated idea with length:", text.length);
+      
+      // Validate the generated idea structure (basic validation)
+      const ideaIsValid = isValidProjectIdea({ title: 'Generated', overview: text });
+      logger.info("Generated idea validation:", ideaIsValid);
+
+      // Return the generated idea with metadata
+      return {
+        success: true,
+        idea: text,
+        metadata: {
+          generatedAt: new Date().toISOString(),
+          studentProfile: profile,
+          query,
+          gameResponses,
+          validated: ideaIsValid
+        }
+      };
+    } catch (genkitError) {
+      logger.error("Genkit error:", genkitError);
+      
+      // Fallback to a simple response if genkit fails
+      const fallbackIdea = `# ${query}\n\nBased on your profile as a ${profile.stream} student in ${profile.year}, here's a personalized project idea:\n\n## Project Overview\nThis project is designed for ${profile.skillLevel} level students and can be completed in ${profile.projectDuration}.\n\n## Technical Requirements\n- Technologies: ${profile.preferredTechnologies?.join(', ') || 'Flexible'}\n- Team Size: ${profile.teamSize}\n- Skill Level: ${profile.skillLevel}\n\n## Implementation Guide\n1. Start with basic setup and planning\n2. Implement core functionality\n3. Test and refine your solution\n\nThis project will help you develop practical skills in ${profile.interests?.join(', ') || 'your chosen area'}.`;
+      
+      return {
+        success: true,
+        idea: fallbackIdea,
+        metadata: {
+          generatedAt: new Date().toISOString(),
+          studentProfile: profile,
+          query,
+          gameResponses,
+          validated: true,
+          fallback: true
+        }
+      };
+    }
   } catch (error) {
     logger.error("Error generating idea:", error);
     throw new Error(`Failed to generate idea: ${error instanceof Error ? error.message : 'Unknown error'}`);
