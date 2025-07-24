@@ -120,15 +120,13 @@ const ParticleSystem = () => {
 // Login Screen Component
 const LoginScreen = ({ onLogin, isLoading }) => {
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center relative bg-black">
-            {/* Move the logo up by adding a negative margin-bottom */}
-            <div className="mb-[-100px] w-full">
+        <div className="min-h-screen flex flex-col relative bg-black">
+            {/* Logo positioned in upper portion */}
+            <div className="flex-1 flex items-center justify-center">
                 <InteractiveLogo />
             </div>
-            {/* Add more top margin to push the content down and away from the logo */}
-            <div className="content text-center z-10 mt-[200px]">
-                {/* Text removed as requested */}
-                
+            {/* Login button positioned in lower portion */}
+            <div className="content text-center z-10 pb-20">
                 <button
                     onClick={onLogin}
                     disabled={isLoading}
@@ -244,28 +242,17 @@ const GameStep = ({ step, onAnswer, currentScore, totalSteps }) => {
 };
 
 // Project Idea Display Component
-const ProjectIdeaDisplay = ({ idea, onSaveToHistory, onStartNew }) => {
-    const [isSaving, setIsSaving] = useState(false);
-
-    const handleSave = async () => {
-        setIsSaving(true);
-        await onSaveToHistory();
-        setIsSaving(false);
-    };
-
+const ProjectIdeaDisplay = ({ idea, onStartNew }) => {
     return (
         <div className="max-w-4xl mx-auto">
             <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-6">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-2xl font-semibold text-white">Your Personalized Project Idea</h3>
                     <div className="flex gap-3">
-                        <button
-                            onClick={handleSave}
-                            disabled={isSaving}
-                            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                        >
-                            {isSaving ? 'Saving...' : 'Save to History'}
-                        </button>
+                        <div className="bg-green-600/20 border border-green-600 text-green-400 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
+                            <span>✓</span>
+                            <span>Automatically Saved</span>
+                        </div>
                         <button
                             onClick={onStartNew}
                             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
@@ -283,7 +270,7 @@ const ProjectIdeaDisplay = ({ idea, onSaveToHistory, onStartNew }) => {
 };
 
 // History Component
-const HistoryView = ({ user, onBack }) => {
+const HistoryView = ({ user, onBack, onViewIdea }) => {
     const [history, setHistory] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -339,7 +326,11 @@ const HistoryView = ({ user, onBack }) => {
             ) : (
                 <div className="space-y-4">
                     {history.map((item) => (
-                        <div key={item.id} className="bg-gray-800/30 border border-gray-700 rounded-lg p-4">
+                        <div 
+                            key={item.id} 
+                            className="bg-gray-800/30 border border-gray-700 rounded-lg p-4 hover:bg-gray-800/50 transition-colors cursor-pointer"
+                            onClick={() => onViewIdea(item.idea)}
+                        >
                             <div className="flex justify-between items-start mb-2">
                                 <h3 className="text-lg font-semibold text-white">{item.query}</h3>
                                 <span className="text-green-400 font-medium">Score: {item.gameScore}</span>
@@ -347,8 +338,11 @@ const HistoryView = ({ user, onBack }) => {
                             <div className="text-sm text-gray-400 mb-2">
                                 {item.studentProfile.stream} • {item.studentProfile.year} • {item.studentProfile.skillLevel}
                             </div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-500 mb-2">
                                 Generated on {new Date(item.generatedAt).toLocaleDateString()}
+                            </div>
+                            <div className="text-xs text-blue-400">
+                                Click to view full idea →
                             </div>
                         </div>
                     ))}
@@ -360,18 +354,44 @@ const HistoryView = ({ user, onBack }) => {
 
 // Main App Screen Component
 const AppScreen = ({ user, onLogout }) => {
-    const [currentView, setCurrentView] = useState('welcome'); // welcome, game, generating, result, history
+    const [currentView, setCurrentView] = useState('welcome');
     const [query, setQuery] = useState('');
     const [gameSteps, setGameSteps] = useState([]);
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [gameResponses, setGameResponses] = useState([]);
     const [currentScore, setCurrentScore] = useState(0);
     const [studentProfile, setStudentProfile] = useState({});
-    const [isGenerating, setIsGenerating] = useState(false);
     const [generatedIdea, setGeneratedIdea] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [userHistory, setUserHistory] = useState([]);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
     const functions = typeof firebase !== 'undefined' ? firebase.functions() : null;
     const firestore = typeof firebase !== 'undefined' ? firebase.firestore() : null;
+
+    // Load user history function
+    const loadUserHistory = async () => {
+        if (!functions) return;
+        
+        setIsLoadingHistory(true);
+        try {
+            const getUserHistory = functions.httpsCallable('getUserHistory');
+            const result = await getUserHistory({ userId: user.uid });
+            
+            if (result.data.success) {
+                setUserHistory(result.data.history);
+            }
+        } catch (error) {
+            console.error('Error loading history:', error);
+        } finally {
+            setIsLoadingHistory(false);
+        }
+    };
+
+    // Load history on component mount
+    useEffect(() => {
+        loadUserHistory();
+    }, [user]);
 
     const startGameFlow = async () => {
         if (!functions) {
@@ -448,6 +468,40 @@ const AppScreen = ({ user, onLogout }) => {
                 setGeneratedIdea(result.data.idea);
                 setCurrentView('result');
                 
+                // Automatically save to history
+                try {
+                    console.log('Attempting to auto-save idea to history for user:', user.uid);
+                    console.log('Idea data to save:', {
+                        query: query,
+                        ideaLength: result.data.idea ? result.data.idea.length : 0,
+                        profileSummary: profile,
+                        gameScore: currentScore,
+                        gameStepsCount: responses.length
+                    });
+                    
+                    const saveIdeaToHistory = functions.httpsCallable('saveIdeaToHistory');
+                    const saveResult = await saveIdeaToHistory({
+                        userId: user.uid,
+                        ideaData: {
+                            query,
+                            idea: result.data.idea,
+                            studentProfile: profile,
+                            gameScore: currentScore
+                        },
+                        gameSteps: responses
+                    });
+                    
+                    console.log('Idea automatically saved to history with result:', saveResult.data);
+                    
+                    // Refresh history after saving
+                    console.log('Refreshing history data...');
+                    await loadUserHistory();
+                    console.log('History refreshed, current count:', userHistory.length);
+                } catch (historyError) {
+                    console.error('Error auto-saving to history:', historyError);
+                    // Don't show error to user as this is automatic
+                }
+                
                 // Save to user profile
                 if (firestore) {
                     await firestore.collection('users').doc(user.uid).set({
@@ -500,9 +554,12 @@ const AppScreen = ({ user, onLogout }) => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="min-h-screen flex flex-col bg-black relative">
+            {/* Add particle system background */}
+            <ParticleSystem />
+            
             {/* Header */}
-            <header className="bg-gray-900/50 backdrop-blur-sm border-b border-gray-800 p-4">
+            <header className="bg-black/50 backdrop-blur-sm border-b border-gray-800 p-4 relative z-10">
                 <div className="max-w-6xl mx-auto flex justify-between items-center">
                     <div className="flex items-center gap-4">
                         <h1 className="text-2xl font-bold text-white">Pideas</h1>
@@ -528,7 +585,7 @@ const AppScreen = ({ user, onLogout }) => {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col items-center justify-center p-8">
+            <main className="flex-1 flex flex-col items-center justify-center p-8 relative z-10">
                 {currentView === 'welcome' && (
                     <div className="w-full max-w-4xl">
                         <div className="text-center mb-8">
@@ -562,6 +619,62 @@ const AppScreen = ({ user, onLogout }) => {
                                 <p>Answer 7 fun questions to get a perfectly tailored project idea!</p>
                             </div>
                         </div>
+                        
+                        {/* History Section */}
+                        <div className="mt-12">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-2xl font-bold text-white">Your Recent Project Ideas</h3>
+                                <span className="text-gray-400 text-sm">{userHistory.length} ideas generated</span>
+                            </div>
+                            
+                            {isLoadingHistory ? (
+                                <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-8 text-center">
+                                    <div className="text-gray-400">Loading your project history...</div>
+                                </div>
+                            ) : userHistory.length === 0 ? (
+                                <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-8 text-center">
+                                    <p className="text-gray-400">No project ideas generated yet. Start your first gamified session above!</p>
+                                </div>
+                            ) : (
+                                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                    {userHistory.slice(0, 6).map((item) => (
+                                        <div 
+                                            key={item.id} 
+                                            className="bg-gray-800/30 border border-gray-700 rounded-lg p-4 hover:bg-gray-800/50 transition-colors cursor-pointer"
+                                            onClick={() => {
+                                                setGeneratedIdea(item.idea);
+                                                setCurrentView('result');
+                                            }}
+                                        >
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h4 className="text-lg font-semibold text-white truncate">{item.query}</h4>
+                                                <span className="text-green-400 font-medium text-sm ml-2">Score: {item.gameScore}</span>
+                                            </div>
+                                            <div className="text-sm text-gray-400 mb-2">
+                                                {item.studentProfile.stream} • {item.studentProfile.skillLevel}
+                                            </div>
+                                            <div className="text-xs text-gray-500 mb-2">
+                                                {new Date(item.generatedAt).toLocaleDateString()}
+                                            </div>
+                                            <div className="text-xs text-blue-400">
+                                                Click to view full idea →
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            
+                            {userHistory.length > 6 && (
+                                <div className="text-center mt-4">
+                                    <button
+                                        onClick={() => setCurrentView('history')}
+                                        className="text-blue-400 hover:text-blue-300 transition-colors"
+                                    >
+                                        View all {userHistory.length} ideas →
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 
@@ -591,7 +704,6 @@ const AppScreen = ({ user, onLogout }) => {
                 {currentView === 'result' && generatedIdea && (
                     <ProjectIdeaDisplay
                         idea={generatedIdea}
-                        onSaveToHistory={saveToHistory}
                         onStartNew={startNewIdea}
                     />
                 )}
@@ -600,6 +712,10 @@ const AppScreen = ({ user, onLogout }) => {
                     <HistoryView
                         user={user}
                         onBack={() => setCurrentView('welcome')}
+                        onViewIdea={(idea) => {
+                            setGeneratedIdea(idea);
+                            setCurrentView('result');
+                        }}
                     />
                 )}
             </main>
