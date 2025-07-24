@@ -107,6 +107,104 @@ interface HistorySaveRequest {
   gameSteps: any[];
 }
 
+// Admin and Role Management Interfaces
+interface UserRole {
+  userId: string;
+  email: string;
+  role: 'admin' | 'user';
+  createdAt: string;
+  lastLogin?: string;
+  status: 'active' | 'inactive';
+}
+
+interface AdminAction {
+  adminId: string;
+  action: string;
+  targetUserId?: string;
+  timestamp: string;
+  details: any;
+}
+
+interface UserManagementRequest {
+  adminUserId: string;
+  targetUserId?: string;
+  newRole?: 'admin' | 'user';
+  newStatus?: 'active' | 'inactive';
+}
+
+interface BulkUserRequest {
+  adminUserId: string;
+  userIds: string[];
+  action: 'changeRole' | 'changeStatus' | 'export';
+  newRole?: 'admin' | 'user';
+  newStatus?: 'active' | 'inactive';
+}
+
+// Helper functions for admin operations
+async function isUserAdmin(userId: string): Promise<boolean> {
+  try {
+    const db = admin.firestore();
+    const userDoc = await db.collection('userRoles').doc(userId).get();
+    
+    if (!userDoc.exists) {
+      return false;
+    }
+    
+    const userData = userDoc.data() as UserRole;
+    return userData.role === 'admin' && userData.status === 'active';
+  } catch (error) {
+    logger.error('Error checking admin status:', error);
+    return false;
+  }
+}
+
+async function logAdminAction(adminId: string, action: string, targetUserId?: string, details?: any): Promise<void> {
+  try {
+    const db = admin.firestore();
+    const actionLog: AdminAction = {
+      adminId,
+      action,
+      targetUserId,
+      timestamp: new Date().toISOString(),
+      details: details || {}
+    };
+    
+    await db.collection('adminLogs').add(actionLog);
+  } catch (error) {
+    logger.error('Error logging admin action:', error);
+  }
+}
+
+async function ensureUserRole(userId: string, email: string): Promise<void> {
+  try {
+    const db = admin.firestore();
+    const userRoleDoc = await db.collection('userRoles').doc(userId).get();
+    
+    if (!userRoleDoc.exists) {
+      // Check if this is the first user (make them admin)
+      const allUsersSnapshot = await db.collection('userRoles').limit(1).get();
+      const isFirstUser = allUsersSnapshot.empty;
+      
+      // Create user role (first user becomes admin)
+      const userRole: UserRole = {
+        userId,
+        email,
+        role: isFirstUser ? 'admin' : 'user',
+        createdAt: new Date().toISOString(),
+        status: 'active'
+      };
+      
+      await db.collection('userRoles').doc(userId).set(userRole);
+      
+      if (isFirstUser) {
+        logger.info(`First user ${email} created as admin`);
+      }
+    }
+  } catch (error) {
+    logger.error('Error ensuring user role:', error);
+  }
+}
+
 /**
  * Get gamification questions for context gathering
  */
@@ -363,6 +461,23 @@ export const saveIdeaToHistory = onCall({maxInstances: 5}, async (request: any) 
     if (!userId) {
       throw new Error("User ID is required");
     }
+    
+    // Ensure user role exists (create default if not)
+    // Get user email from Firebase Auth
+    try {
+      const userRecord = await admin.auth().getUser(userId);
+      if (userRecord.email) {
+        await ensureUserRole(userId, userRecord.email);
+        
+        // Update last login timestamp
+        const db = admin.firestore();
+        await db.collection('userRoles').doc(userId).update({
+          lastLogin: new Date().toISOString()
+        });
+      }
+    } catch (authError) {
+      logger.warn('Could not get user email for role management:', authError);
+    }
 
     // Create a new history document in Firestore
     const historyId = `history_${Date.now()}`;
@@ -452,5 +567,286 @@ export const getUserHistory = onCall({maxInstances: 5}, async (request: any) => 
   } catch (error) {
     logger.error("Error getting user history:", error);
     throw new Error(`Failed to get history: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+});
+
+/**
+ * Get all users for admin console (admin only)
+ */
+export const getAllUsers = onCall({maxInstances: 3}, async (request: any) => {
+  try {
+    const { adminUserId } = request.data;
+    
+    if (!adminUserId) {
+      throw new Error("Admin user ID is required");
+    }
+    
+    // Check if user is admin
+    const isAdmin = await isUserAdmin(adminUserId);
+    if (!isAdmin) {
+      throw new Error("Access denied: Admin privileges required");
+    }
+    
+    const db = admin.firestore();
+    
+    // Get all user roles
+    const usersSnapshot = await db.collection('userRoles').get();
+    const users: UserRole[] = [];
+    
+    usersSnapshot.forEach((doc) => {
+      users.push(doc.data() as UserRole);
+    });
+    
+    // Log admin action
+    await logAdminAction(adminUserId, 'VIEW_ALL_USERS');
+    
+    return {
+      success: true,
+      users: users.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    };
+  } catch (error) {
+    logger.error("Error getting all users:", error);
+    throw new Error(`Failed to get users: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+});
+
+/**
+ * Get user's role and permissions
+ */
+export const getUserRole = onCall({maxInstances: 5}, async (request: any) => {
+  try {
+    const { userId } = request.data;
+    
+    if (!userId) {
+      throw new Error("User ID is required");
+    }
+    
+    const db = admin.firestore();
+    const userDoc = await db.collection('userRoles').doc(userId).get();
+    
+    if (!userDoc.exists) {
+      // Return default user role
+      return {
+        success: true,
+        role: 'user',
+        status: 'active',
+        isAdmin: false
+      };
+    }
+    
+    const userData = userDoc.data() as UserRole;
+    
+    return {
+      success: true,
+      role: userData.role,
+      status: userData.status,
+      isAdmin: userData.role === 'admin' && userData.status === 'active'
+    };
+  } catch (error) {
+    logger.error("Error getting user role:", error);
+    throw new Error(`Failed to get user role: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+});
+
+/**
+ * Update user role (admin only)
+ */
+export const updateUserRole = onCall({maxInstances: 3}, async (request: any) => {
+  try {
+    const { adminUserId, targetUserId, newRole, newStatus }: UserManagementRequest = request.data;
+    
+    if (!adminUserId || !targetUserId) {
+      throw new Error("Admin user ID and target user ID are required");
+    }
+    
+    // Check if user is admin
+    const isAdmin = await isUserAdmin(adminUserId);
+    if (!isAdmin) {
+      throw new Error("Access denied: Admin privileges required");
+    }
+    
+    const db = admin.firestore();
+    const userDoc = await db.collection('userRoles').doc(targetUserId).get();
+    
+    if (!userDoc.exists) {
+      throw new Error("Target user not found");
+    }
+    
+    const currentData = userDoc.data() as UserRole;
+    const updateData: Partial<UserRole> = {};
+    
+    if (newRole && newRole !== currentData.role) {
+      updateData.role = newRole;
+    }
+    
+    if (newStatus && newStatus !== currentData.status) {
+      updateData.status = newStatus;
+    }
+    
+    if (Object.keys(updateData).length === 0) {
+      return {
+        success: true,
+        message: "No changes needed"
+      };
+    }
+    
+    await db.collection('userRoles').doc(targetUserId).update(updateData);
+    
+    // Log admin action
+    await logAdminAction(adminUserId, 'UPDATE_USER_ROLE', targetUserId, {
+      previousRole: currentData.role,
+      newRole: newRole || currentData.role,
+      previousStatus: currentData.status,
+      newStatus: newStatus || currentData.status
+    });
+    
+    return {
+      success: true,
+      message: "User role updated successfully",
+      updatedData: updateData
+    };
+  } catch (error) {
+    logger.error("Error updating user role:", error);
+    throw new Error(`Failed to update user role: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+});
+
+/**
+ * Get all ideas across users (admin only)
+ */
+export const getAllIdeas = onCall({maxInstances: 3}, async (request: any) => {
+  try {
+    const { adminUserId, limit = 100, searchQuery } = request.data;
+    
+    if (!adminUserId) {
+      throw new Error("Admin user ID is required");
+    }
+    
+    // Check if user is admin
+    const isAdmin = await isUserAdmin(adminUserId);
+    if (!isAdmin) {
+      throw new Error("Access denied: Admin privileges required");
+    }
+    
+    const db = admin.firestore();
+    let query = db.collection('projectHistory')
+      .orderBy('generatedAt', 'desc')
+      .limit(limit);
+    
+    const snapshot = await query.get();
+    const ideas: any[] = [];
+    
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      if (!searchQuery || 
+          data.query?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          data.idea?.toLowerCase().includes(searchQuery.toLowerCase())) {
+        ideas.push(data);
+      }
+    });
+    
+    // Log admin action
+    await logAdminAction(adminUserId, 'VIEW_ALL_IDEAS', undefined, { searchQuery, resultCount: ideas.length });
+    
+    return {
+      success: true,
+      ideas,
+      totalCount: ideas.length
+    };
+  } catch (error) {
+    logger.error("Error getting all ideas:", error);
+    throw new Error(`Failed to get all ideas: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+});
+
+/**
+ * Get admin activity logs (admin only)
+ */
+export const getAdminLogs = onCall({maxInstances: 3}, async (request: any) => {
+  try {
+    const { adminUserId, limit = 50 } = request.data;
+    
+    if (!adminUserId) {
+      throw new Error("Admin user ID is required");
+    }
+    
+    // Check if user is admin
+    const isAdmin = await isUserAdmin(adminUserId);
+    if (!isAdmin) {
+      throw new Error("Access denied: Admin privileges required");
+    }
+    
+    const db = admin.firestore();
+    const logsSnapshot = await db.collection('adminLogs')
+      .orderBy('timestamp', 'desc')
+      .limit(limit)
+      .get();
+    
+    const logs: AdminAction[] = [];
+    logsSnapshot.forEach((doc) => {
+      logs.push({ id: doc.id, ...doc.data() } as AdminAction & { id: string });
+    });
+    
+    return {
+      success: true,
+      logs
+    };
+  } catch (error) {
+    logger.error("Error getting admin logs:", error);
+    throw new Error(`Failed to get admin logs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+});
+
+/**
+ * Bulk user operations (admin only)
+ */
+export const bulkUserOperations = onCall({maxInstances: 3}, async (request: any) => {
+  try {
+    const { adminUserId, userIds, action, newRole, newStatus }: BulkUserRequest = request.data;
+    
+    if (!adminUserId || !userIds || !Array.isArray(userIds) || !action) {
+      throw new Error("Admin user ID, user IDs array, and action are required");
+    }
+    
+    // Check if user is admin
+    const isAdmin = await isUserAdmin(adminUserId);
+    if (!isAdmin) {
+      throw new Error("Access denied: Admin privileges required");
+    }
+    
+    const db = admin.firestore();
+    const results: any[] = [];
+    
+    for (const userId of userIds) {
+      try {
+        if (action === 'changeRole' && newRole) {
+          await db.collection('userRoles').doc(userId).update({ role: newRole });
+          results.push({ userId, success: true, action: 'roleChanged' });
+        } else if (action === 'changeStatus' && newStatus) {
+          await db.collection('userRoles').doc(userId).update({ status: newStatus });
+          results.push({ userId, success: true, action: 'statusChanged' });
+        }
+      } catch (error) {
+        results.push({ userId, success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+      }
+    }
+    
+    // Log admin action
+    await logAdminAction(adminUserId, 'BULK_USER_OPERATION', undefined, {
+      action,
+      userIds,
+      newRole,
+      newStatus,
+      results
+    });
+    
+    return {
+      success: true,
+      results,
+      message: `Bulk operation completed for ${results.filter(r => r.success).length}/${userIds.length} users`
+    };
+  } catch (error) {
+    logger.error("Error in bulk user operations:", error);
+    throw new Error(`Failed to perform bulk operations: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });

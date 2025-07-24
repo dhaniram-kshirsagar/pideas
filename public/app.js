@@ -365,9 +365,32 @@ const AppScreen = ({ user, onLogout }) => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [userHistory, setUserHistory] = useState([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+    const [userRole, setUserRole] = useState(null);
+    const [isLoadingRole, setIsLoadingRole] = useState(true);
 
     const functions = typeof firebase !== 'undefined' ? firebase.functions() : null;
     const firestore = typeof firebase !== 'undefined' ? firebase.firestore() : null;
+
+    // Load user role function
+    const loadUserRole = async () => {
+        if (!functions) {
+            setIsLoadingRole(false);
+            return;
+        }
+        
+        try {
+            const getUserRole = functions.httpsCallable('getUserRole');
+            const result = await getUserRole({ userId: user.uid });
+            
+            if (result.data.success) {
+                setUserRole(result.data);
+            }
+        } catch (error) {
+            console.error('Error loading user role:', error);
+        } finally {
+            setIsLoadingRole(false);
+        }
+    };
 
     // Load user history function
     const loadUserHistory = async () => {
@@ -390,6 +413,7 @@ const AppScreen = ({ user, onLogout }) => {
 
     // Load history on component mount
     useEffect(() => {
+        loadUserRole();
         loadUserHistory();
     }, [user]);
 
@@ -573,6 +597,14 @@ const AppScreen = ({ user, onLogout }) => {
                         >
                             History
                         </button>
+                        {userRole?.isAdmin && (
+                            <button
+                                onClick={() => setCurrentView('admin')}
+                                className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
+                            >
+                                Admin Console
+                            </button>
+                        )}
                         <span className="text-gray-300">Welcome, {user.displayName}</span>
                         <button
                             onClick={onLogout}
@@ -716,6 +748,13 @@ const AppScreen = ({ user, onLogout }) => {
                             setGeneratedIdea(idea);
                             setCurrentView('result');
                         }}
+                    />
+                )}
+
+                {currentView === 'admin' && (
+                    <AdminConsole
+                        user={user}
+                        onBack={() => setCurrentView('welcome')}
                     />
                 )}
             </main>
