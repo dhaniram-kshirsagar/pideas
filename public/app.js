@@ -242,51 +242,60 @@ const GameStep = ({ step, onAnswer, currentScore, totalSteps }) => {
 };
 
 // Collapsible Section Component
-const CollapsibleSection = ({ title, content, isExpanded, onToggle, priority = 'medium', icon }) => {
-    const priorityColors = {
-        urgent: 'from-red-600 to-red-800 border-red-500/50',
-        high: 'from-orange-600 to-orange-800 border-orange-500/50',
-        medium: 'from-yellow-600 to-yellow-800 border-yellow-500/50',
-        low: 'from-green-600 to-green-800 border-green-500/50'
-    };
-
-    const priorityIcons = {
-        urgent: '🔴',
-        high: '🟠', 
-        medium: '🟡',
-        low: '🟢'
-    };
-
+const CollapsibleSection = ({ title, content, isExpanded, onToggle, icon, isSpecial = false }) => {
     return (
-        <div className={`bg-gradient-to-r ${priorityColors[priority]} rounded-xl border backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 mb-4`}>
+        <div className={`${
+            isSpecial 
+                ? 'bg-gradient-to-r from-purple-900/40 to-blue-900/40 border-purple-500/30' 
+                : 'bg-gray-900/60 border-gray-700/40'
+        } backdrop-blur-sm border rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 mb-4 hover:border-purple-400/50`}>
             <button
                 onClick={onToggle}
-                className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors duration-200 rounded-xl"
+                className="w-full px-8 py-6 flex items-center justify-between text-left hover:bg-white/5 transition-all duration-300 rounded-2xl group"
             >
-                <div className="flex items-center gap-3">
-                    <span className="text-2xl">{icon || priorityIcons[priority]}</span>
-                    <h3 className="text-xl font-bold text-white">{title}</h3>
-                </div>
-                <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-white/70 uppercase tracking-wide">
-                        {priority}
-                    </span>
-                    <div className={`transform transition-transform duration-300 ${
-                        isExpanded ? 'rotate-180' : 'rotate-0'
+                <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                        isSpecial 
+                            ? 'bg-gradient-to-r from-purple-600 to-blue-600 shadow-lg shadow-purple-500/25' 
+                            : 'bg-gray-800/80 group-hover:bg-gray-700/80'
                     }`}>
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <span className="text-2xl">{icon}</span>
+                    </div>
+                    <div>
+                        <h3 className="text-2xl font-bold text-white group-hover:text-purple-300 transition-colors">
+                            {title}
+                        </h3>
+                        {isSpecial && (
+                            <p className="text-sm text-purple-300/80 font-medium mt-1">
+                                Essential project information
+                            </p>
+                        )}
+                    </div>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                        isExpanded ? 'bg-purple-600/30 text-purple-300' : 'bg-gray-700/50 text-gray-400'
+                    }`}>
+                        <svg 
+                            className={`w-5 h-5 transform transition-transform duration-300 ${
+                                isExpanded ? 'rotate-180' : 'rotate-0'
+                            }`} 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                        >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                     </div>
                 </div>
             </button>
             
-            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                isExpanded ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
+            <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
             }`}>
-                <div className="px-6 pb-6">
-                    <div className="bg-black/20 rounded-lg p-4 backdrop-blur-sm">
-                        <div className="text-gray-100 whitespace-pre-wrap leading-relaxed">
+                <div className="px-8 pb-8">
+                    <div className="bg-black/30 rounded-xl p-6 backdrop-blur-sm border border-white/5">
+                        <div className="text-gray-100 whitespace-pre-wrap leading-relaxed text-lg">
                             {content}
                         </div>
                     </div>
@@ -308,22 +317,30 @@ const ProjectIdeaDisplay = ({ idea, onStartNew }) => {
         const lines = idea.split('\n');
         const parsedSections = [];
         let currentSection = null;
+        let titleSection = null;
+        let overviewSection = null;
         
         lines.forEach((line, index) => {
             // Check if line is a section header (starts with ##)
             if (line.trim().startsWith('##')) {
                 // Save previous section if exists
                 if (currentSection) {
-                    parsedSections.push(currentSection);
+                    const titleLower = currentSection.title.toLowerCase();
+                    if (titleLower.includes('title')) {
+                        titleSection = currentSection;
+                    } else if (titleLower.includes('overview')) {
+                        overviewSection = currentSection;
+                    } else {
+                        parsedSections.push(currentSection);
+                    }
                 }
                 
                 // Start new section
                 const title = line.replace(/^#+\s*/, '').trim();
                 currentSection = {
-                    id: `section-${parsedSections.length}`,
+                    id: `section-${Date.now()}-${Math.random()}`,
                     title,
                     content: '',
-                    priority: getSectionPriority(title),
                     icon: getSectionIcon(title)
                 };
             } else if (currentSection && line.trim()) {
@@ -332,11 +349,10 @@ const ProjectIdeaDisplay = ({ idea, onStartNew }) => {
             } else if (!currentSection && line.trim()) {
                 // Content before first section
                 if (parsedSections.length === 0) {
-                    parsedSections.push({
+                    parsedSections.unshift({
                         id: 'intro',
-                        title: 'Project Overview',
+                        title: 'Project Introduction',
                         content: line,
-                        priority: 'high',
                         icon: '📋'
                     });
                 }
@@ -345,24 +361,40 @@ const ProjectIdeaDisplay = ({ idea, onStartNew }) => {
         
         // Add final section
         if (currentSection) {
-            parsedSections.push(currentSection);
+            const titleLower = currentSection.title.toLowerCase();
+            if (titleLower.includes('title')) {
+                titleSection = currentSection;
+            } else if (titleLower.includes('overview')) {
+                overviewSection = currentSection;
+            } else {
+                parsedSections.push(currentSection);
+            }
+        }
+        
+        // Combine title and overview sections
+        if (titleSection || overviewSection) {
+            const combinedContent = [
+                titleSection?.content || '',
+                overviewSection?.content || ''
+            ].filter(Boolean).join('\n\n');
+            
+            const combinedSection = {
+                id: 'title-overview',
+                title: 'Project Title & Overview',
+                content: combinedContent,
+                icon: '💡',
+                isSpecial: true
+            };
+            
+            parsedSections.unshift(combinedSection);
         }
         
         setSections(parsedSections);
         
-        // Expand first few sections by default
-        const defaultExpanded = new Set(parsedSections.slice(0, 2).map(s => s.id));
+        // Expand the combined title/overview section by default
+        const defaultExpanded = new Set(['title-overview']);
         setExpandedSections(defaultExpanded);
     }, [idea]);
-
-    // Determine section priority based on title
-    const getSectionPriority = (title) => {
-        const titleLower = title.toLowerCase();
-        if (titleLower.includes('title') || titleLower.includes('overview')) return 'urgent';
-        if (titleLower.includes('objective') || titleLower.includes('requirement')) return 'high';
-        if (titleLower.includes('implementation') || titleLower.includes('guide')) return 'medium';
-        return 'low';
-    };
 
     // Get appropriate icon for section
     const getSectionIcon = (title) => {
@@ -455,7 +487,7 @@ const ProjectIdeaDisplay = ({ idea, onStartNew }) => {
             </div>
 
             {/* Collapsible Sections */}
-            <div className="space-y-4">
+            <div className="space-y-6">
                 {sections.map((section) => (
                     <CollapsibleSection
                         key={section.id}
@@ -463,34 +495,34 @@ const ProjectIdeaDisplay = ({ idea, onStartNew }) => {
                         content={section.content}
                         isExpanded={expandedSections.has(section.id)}
                         onToggle={() => toggleSection(section.id)}
-                        priority={section.priority}
                         icon={section.icon}
+                        isSpecial={section.isSpecial || false}
                     />
                 ))}
             </div>
 
-            {/* Priority Legend */}
-            <div className="mt-8 bg-gray-900/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4">
-                <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                    <span>🎨</span>
-                    Priority Legend
+            {/* Navigation Tips */}
+            <div className="mt-8 bg-gradient-to-r from-gray-900/60 to-gray-800/60 backdrop-blur-sm border border-purple-500/20 rounded-2xl p-6">
+                <h4 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
+                    <span className="text-2xl">💡</span>
+                    Navigation Tips
                 </h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                    <div className="flex items-center gap-2">
-                        <span>🔴</span>
-                        <span className="text-red-300 font-medium">Urgent - Core Information</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                        <span className="text-xl">👁️</span>
+                        <span className="text-gray-300">Click section headers to expand/collapse content</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span>🟠</span>
-                        <span className="text-orange-300 font-medium">High - Key Requirements</span>
+                    <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                        <span className="text-xl">📖</span>
+                        <span className="text-gray-300">Use "Expand All" to view complete project details</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span>🟡</span>
-                        <span className="text-yellow-300 font-medium">Medium - Implementation</span>
+                    <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                        <span className="text-xl">✨</span>
+                        <span className="text-gray-300">Essential information is highlighted with special styling</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span>🟢</span>
-                        <span className="text-green-300 font-medium">Low - Additional Info</span>
+                    <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                        <span className="text-xl">🚀</span>
+                        <span className="text-gray-300">Your project idea is automatically saved to history</span>
                     </div>
                 </div>
             </div>
