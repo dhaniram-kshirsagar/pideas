@@ -246,38 +246,38 @@ const CollapsibleSection = ({ title, content, isExpanded, onToggle, icon, isSpec
     return (
         <div className={`${
             isSpecial 
-                ? 'bg-gradient-to-r from-purple-900/40 to-blue-900/40 border-purple-500/30' 
-                : 'bg-gray-900/60 border-gray-700/40'
-        } backdrop-blur-sm border rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 mb-4 hover:border-purple-400/50`}>
+                ? 'bg-gray-900/80 border-blue-500/20' 
+                : 'bg-gray-900/60 border-gray-700/30'
+        } backdrop-blur-sm border rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 mb-3 hover:border-gray-600/50`}>
             <button
                 onClick={onToggle}
-                className="w-full px-8 py-6 flex items-center justify-between text-left hover:bg-white/5 transition-all duration-300 rounded-2xl group"
+                className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/3 transition-all duration-200 rounded-lg group"
             >
                 <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 ${
                         isSpecial 
-                            ? 'bg-gradient-to-r from-purple-600 to-blue-600 shadow-lg shadow-purple-500/25' 
-                            : 'bg-gray-800/80 group-hover:bg-gray-700/80'
+                            ? 'bg-blue-600/80' 
+                            : 'bg-gray-800/60 group-hover:bg-gray-700/60'
                     }`}>
-                        <span className="text-2xl">{icon}</span>
+                        <span className="text-lg">{icon}</span>
                     </div>
                     <div>
-                        <h3 className="text-2xl font-bold text-white group-hover:text-purple-300 transition-colors">
+                        <h3 className="text-lg font-semibold text-white group-hover:text-purple-300 transition-colors">
                             {title}
                         </h3>
                         {isSpecial && (
-                            <p className="text-sm text-purple-300/80 font-medium mt-1">
+                            <p className="text-xs text-purple-300/70 font-medium mt-1">
                                 Essential project information
                             </p>
                         )}
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
-                        isExpanded ? 'bg-purple-600/30 text-purple-300' : 'bg-gray-700/50 text-gray-400'
+                    <div className={`w-6 h-6 rounded-md flex items-center justify-center transition-all duration-200 ${
+                        isExpanded ? 'bg-blue-600/20 text-blue-400' : 'bg-gray-700/40 text-gray-500'
                     }`}>
                         <svg 
-                            className={`w-5 h-5 transform transition-transform duration-300 ${
+                            className={`w-4 h-4 transform transition-transform duration-200 ${
                                 isExpanded ? 'rotate-180' : 'rotate-0'
                             }`} 
                             fill="none" 
@@ -290,12 +290,12 @@ const CollapsibleSection = ({ title, content, isExpanded, onToggle, icon, isSpec
                 </div>
             </button>
             
-            <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
+            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
                 isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
             }`}>
-                <div className="px-8 pb-8">
-                    <div className="bg-black/30 rounded-xl p-6 backdrop-blur-sm border border-white/5">
-                        <div className="text-gray-100 whitespace-pre-wrap leading-relaxed text-lg">
+                <div className="px-6 pb-6">
+                    <div className="bg-gray-800/40 rounded-lg p-4 border border-gray-700/20">
+                        <div className="text-gray-200 whitespace-pre-wrap leading-relaxed text-sm">
                             {content}
                         </div>
                     </div>
@@ -439,48 +439,42 @@ const ProjectIdeaDisplay = ({ idea, onStartNew }) => {
                         <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl flex items-center justify-center">
                             <span className="text-white text-xl font-bold">💡</span>
                         </div>
-                        <h2 className="text-3xl font-bold text-white bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                        <h2 className="text-2xl font-semibold text-white">
                             Your Personalized Project Idea
                         </h2>
                     </div>
                     <div className="flex gap-3">
-                        <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-500/50 text-green-400 px-4 py-2 rounded-lg font-medium flex items-center gap-2 backdrop-blur-sm">
+                        <div className="bg-green-500/10 border border-green-500/30 text-green-400 px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-2">
                             <span>✓</span>
-                            <span>Automatically Saved</span>
+                            <span>Saved</span>
                         </div>
                         <button
                             onClick={onStartNew}
-                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-md text-sm font-medium transition-colors"
                         >
-                            🔄 Generate New Idea
+                            Generate New Idea
                         </button>
                     </div>
                 </div>
                 
                 {/* Section Controls */}
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-sm text-gray-300">
-                        <div className="flex items-center gap-2">
-                            <span>📊</span>
-                            <span>{sections.length} sections</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span>👁️</span>
-                            <span>{expandedSections.size} expanded</span>
-                        </div>
+                <div className="flex items-center justify-between pt-4 border-t border-gray-700/30">
+                    <div className="flex items-center gap-6 text-xs text-gray-400">
+                        <span>{sections.length} sections</span>
+                        <span>{expandedSections.size} expanded</span>
                     </div>
                     <div className="flex gap-2">
                         <button
                             onClick={expandAll}
-                            className="bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-white px-3 py-1 rounded-lg text-sm font-medium transition-colors"
+                            className="bg-gray-800/60 hover:bg-gray-700/60 text-gray-300 hover:text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors border border-gray-700/40"
                         >
-                            📖 Expand All
+                            Expand All
                         </button>
                         <button
                             onClick={collapseAll}
-                            className="bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-white px-3 py-1 rounded-lg text-sm font-medium transition-colors"
+                            className="bg-gray-800/60 hover:bg-gray-700/60 text-gray-300 hover:text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors border border-gray-700/40"
                         >
-                            📕 Collapse All
+                            Collapse All
                         </button>
                     </div>
                 </div>
@@ -501,28 +495,27 @@ const ProjectIdeaDisplay = ({ idea, onStartNew }) => {
                 ))}
             </div>
 
-            {/* Navigation Tips */}
-            <div className="mt-8 bg-gradient-to-r from-gray-900/60 to-gray-800/60 backdrop-blur-sm border border-purple-500/20 rounded-2xl p-6">
-                <h4 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-                    <span className="text-2xl">💡</span>
-                    Navigation Tips
+            {/* Usage Guide */}
+            <div className="mt-6 bg-gray-900/40 border border-gray-700/30 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-300 mb-3">
+                    Usage Guide
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
-                        <span className="text-xl">👁️</span>
-                        <span className="text-gray-300">Click section headers to expand/collapse content</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-gray-400">
+                    <div className="flex items-center gap-2">
+                        <span className="w-1 h-1 bg-blue-500 rounded-full"></span>
+                        <span>Click headers to expand/collapse sections</span>
                     </div>
-                    <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
-                        <span className="text-xl">📖</span>
-                        <span className="text-gray-300">Use "Expand All" to view complete project details</span>
+                    <div className="flex items-center gap-2">
+                        <span className="w-1 h-1 bg-blue-500 rounded-full"></span>
+                        <span>Use controls above to expand/collapse all</span>
                     </div>
-                    <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
-                        <span className="text-xl">✨</span>
-                        <span className="text-gray-300">Essential information is highlighted with special styling</span>
+                    <div className="flex items-center gap-2">
+                        <span className="w-1 h-1 bg-blue-500 rounded-full"></span>
+                        <span>Essential information is highlighted</span>
                     </div>
-                    <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
-                        <span className="text-xl">🚀</span>
-                        <span className="text-gray-300">Your project idea is automatically saved to history</span>
+                    <div className="flex items-center gap-2">
+                        <span className="w-1 h-1 bg-blue-500 rounded-full"></span>
+                        <span>Project ideas are automatically saved</span>
                     </div>
                 </div>
             </div>
