@@ -1161,6 +1161,7 @@ const AppScreen = ({ user, onLogout }) => {
                     <ProjectIdeaDisplay
                         idea={generatedIdea}
                         onStartNew={startNewIdea}
+                        user={user}
                     />
                 )}
 
