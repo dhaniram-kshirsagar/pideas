@@ -344,6 +344,132 @@ const SidebarNavigation = ({ sections, selectedSection, onSectionSelect, isModif
     );
 };
 
+// Component for chat-based overall idea modification
+const ChatModificationInterface = ({ onModifyIdea, isLoading, user }) => {
+    const [chatInput, setChatInput] = useState('');
+    const [chatHistory, setChatHistory] = useState([]);
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    const handleSendMessage = async () => {
+        if (!chatInput.trim() || isLoading || !user) return;
+
+        const userMessage = {
+            id: Date.now(),
+            type: 'user',
+            content: chatInput.trim(),
+            timestamp: new Date().toISOString()
+        };
+
+        setChatHistory(prev => [...prev, userMessage]);
+        const prompt = chatInput.trim();
+        setChatInput('');
+
+        try {
+            const result = await onModifyIdea(prompt);
+            const aiMessage = {
+                id: Date.now() + 1,
+                type: 'ai',
+                content: 'Idea successfully modified based on your request.',
+                timestamp: new Date().toISOString()
+            };
+            setChatHistory(prev => [...prev, aiMessage]);
+        } catch (error) {
+            const errorMessage = {
+                id: Date.now() + 1,
+                type: 'error',
+                content: 'Failed to modify idea. Please try again.',
+                timestamp: new Date().toISOString()
+            };
+            setChatHistory(prev => [...prev, errorMessage]);
+        }
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
+        }
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                    <span className="text-blue-400">💬</span>
+                    Modify Entire Idea
+                </h3>
+                {chatHistory.length > 0 && (
+                    <button
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1"
+                    >
+                        {isExpanded ? '▼' : '▶'} Chat History ({chatHistory.length})
+                    </button>
+                )}
+            </div>
+
+            {/* Chat History (expandable) */}
+            {isExpanded && chatHistory.length > 0 && (
+                <div className="bg-gray-800/40 rounded-lg p-4 max-h-64 overflow-y-auto space-y-3">
+                    {chatHistory.map((message) => (
+                        <div key={message.id} className={`flex gap-3 ${
+                            message.type === 'user' ? 'justify-end' : 'justify-start'
+                        }`}>
+                            <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                                message.type === 'user' 
+                                    ? 'bg-blue-600 text-white' 
+                                    : message.type === 'error'
+                                    ? 'bg-red-600/80 text-white'
+                                    : 'bg-gray-700 text-gray-100'
+                            }`}>
+                                <p className="text-sm">{message.content}</p>
+                                <p className="text-xs opacity-70 mt-1">
+                                    {new Date(message.timestamp).toLocaleTimeString()}
+                                </p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Chat Input */}
+            <div className="flex gap-3">
+                <div className="flex-1">
+                    <textarea
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Describe how you'd like to modify the entire project idea... (e.g., 'Make it more focused on mobile development' or 'Add AI/ML components')"
+                        className="w-full bg-gray-800/60 border border-gray-700/50 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 resize-none"
+                        rows={3}
+                        disabled={isLoading || !user}
+                    />
+                    {!user && (
+                        <p className="text-xs text-gray-500 mt-1">Please log in to modify ideas</p>
+                    )}
+                </div>
+                <button
+                    onClick={handleSendMessage}
+                    disabled={!chatInput.trim() || isLoading || !user}
+                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center gap-2 self-end"
+                >
+                    {isLoading ? (
+                        <>
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            <span>Modifying...</span>
+                        </>
+                    ) : (
+                        <>
+                            <span>Send</span>
+                            <span className="text-sm opacity-70">↵</span>
+                        </>
+                    )}
+                </button>
+            </div>
+        </div>
+    );
+};
+
 // Section Editor Component
 const SectionEditor = ({ section, onModify, isLoading }) => {
     const [editPrompt, setEditPrompt] = useState('');
@@ -609,6 +735,64 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
         }
     };
 
+    // Handle overall idea modification via chat
+    const handleOverallIdeaModify = async (modificationPrompt) => {
+        if (!user) {
+            throw new Error('Please log in to modify ideas.');
+        }
+
+        setIsModifying(true);
+        
+        try {
+            // Add to modification history
+            const modification = {
+                id: Date.now(),
+                sectionId: 'overall',
+                sectionTitle: 'Overall Idea',
+                prompt: modificationPrompt,
+                timestamp: new Date().toISOString(),
+                originalContent: currentIdea
+            };
+            setModificationHistory(prev => [...prev, modification]);
+
+            // Call backend to modify the entire idea
+            const modifySection = firebase.functions().httpsCallable('modifyIdeaSection');
+            const result = await modifySection({
+                userId: user.uid,
+                originalIdea: currentIdea,
+                sectionTitle: 'Overall Project Idea',
+                sectionContent: currentIdea,
+                modificationPrompt: modificationPrompt
+            });
+
+            if (result.data.success) {
+                // Update the current idea with the modified version
+                setCurrentIdea(result.data.modifiedIdea);
+                
+                // Auto-save the modified idea to history
+                const saveToHistory = firebase.functions().httpsCallable('saveIdeaToHistory');
+                await saveToHistory({
+                    userId: user.uid,
+                    idea: result.data.modifiedIdea,
+                    context: {
+                        modification: true,
+                        modifiedSection: 'Overall Idea',
+                        modificationPrompt: modificationPrompt
+                    }
+                });
+                
+                return result.data.modifiedIdea;
+            } else {
+                throw new Error(result.data.error || 'Failed to modify idea');
+            }
+        } catch (error) {
+            console.error('Error modifying overall idea:', error);
+            throw error;
+        } finally {
+            setIsModifying(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-gray-900">
             {/* Header */}
@@ -665,6 +849,17 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                         </div>
                     </div>
                 )}
+            </div>
+
+            {/* Chat Input for Overall Idea Modification */}
+            <div className="bg-gray-900/80 border-t border-gray-700/50 p-6">
+                <div className="max-w-7xl mx-auto">
+                    <ChatModificationInterface 
+                        onModifyIdea={handleOverallIdeaModify}
+                        isLoading={isModifying}
+                        user={user}
+                    />
+                </div>
             </div>
 
             {/* Modification History Panel (if any modifications) */}
