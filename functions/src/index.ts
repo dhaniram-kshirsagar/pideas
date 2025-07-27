@@ -767,33 +767,133 @@ export const getAdminLogs = onCall({maxInstances: 3}, async (request: any) => {
     const { adminUserId, limit = 50 } = request.data;
     
     if (!adminUserId) {
-      throw new Error("Admin user ID is required");
+      return { success: false, error: 'Admin user ID is required' };
     }
-    
-    // Check if user is admin
+
+    // Verify admin privileges
     const isAdmin = await isUserAdmin(adminUserId);
     if (!isAdmin) {
-      throw new Error("Access denied: Admin privileges required");
+      return { success: false, error: 'Insufficient privileges' };
     }
-    
+
     const db = admin.firestore();
     const logsSnapshot = await db.collection('adminLogs')
       .orderBy('timestamp', 'desc')
       .limit(limit)
       .get();
-    
+
     const logs: AdminAction[] = [];
     logsSnapshot.forEach((doc) => {
-      logs.push({ id: doc.id, ...doc.data() } as AdminAction & { id: string });
+      logs.push(doc.data() as AdminAction);
     });
-    
-    return {
-      success: true,
-      logs
-    };
+
+    return { success: true, logs };
   } catch (error) {
-    logger.error("Error getting admin logs:", error);
-    throw new Error(`Failed to get admin logs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    logger.error('Error fetching admin logs:', error);
+    return { success: false, error: 'Failed to fetch admin logs' };
+  }
+});
+
+/**
+ * Modify a specific section of a project idea
+ */
+export const modifyIdeaSection = onCall({maxInstances: 3, timeoutSeconds: 300}, async (request: any) => {
+  try {
+    const { userId, originalIdea, sectionTitle, sectionContent, modificationPrompt } = request.data;
+    
+    if (!userId || !originalIdea || !sectionTitle || !modificationPrompt) {
+      return { success: false, error: 'Missing required parameters' };
+    }
+
+    // Ensure user role exists
+    const auth = admin.auth();
+    const userRecord = await auth.getUser(userId);
+    await ensureUserRole(userId, userRecord.email || '');
+
+    // Get Gemini API key from environment variables
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    if (!geminiApiKey) {
+      logger.error('Gemini API key not found in environment variables');
+      return { success: false, error: 'API configuration error' };
+    }
+
+    // Initialize Genkit with GoogleAI
+    const ai = genkit({
+      plugins: [googleAI({ apiKey: geminiApiKey })],
+    });
+
+    // Create the modification prompt
+    const modificationSystemPrompt = `You are an expert project idea modifier. Your task is to modify a specific section of a project idea based on user feedback while maintaining consistency with the overall project structure.
+
+Original Project Idea:
+${originalIdea}
+
+Section to Modify: "${sectionTitle}"
+Current Section Content:
+${sectionContent}
+
+Modification Request: ${modificationPrompt}
+
+Instructions:
+1. Modify ONLY the specified section based on the user's request
+2. Maintain the same markdown structure and formatting
+3. Ensure the modified section remains consistent with the overall project theme
+4. Keep the same section header format (## ${sectionTitle})
+5. Return the COMPLETE modified project idea with all sections intact
+6. Make sure all other sections remain unchanged unless they need minor adjustments for consistency
+
+Return the complete modified project idea:`;
+
+    try {
+      // Generate modified idea using Genkit
+      const llmResponse = await ai.generate({
+        model: 'googleai/gemini-2.5-flash',
+        prompt: modificationSystemPrompt,
+        config: {
+          temperature: 0.7,
+          maxOutputTokens: 4000,
+        },
+      });
+      
+      const modifiedIdea = llmResponse.text;
+
+      if (!modifiedIdea || modifiedIdea.trim().length === 0) {
+        throw new Error('Empty response from AI model');
+      }
+
+      logger.info(`Section modification completed for user ${userId}`);
+      
+      return {
+        success: true,
+        modifiedIdea: modifiedIdea,
+        originalSection: sectionContent,
+        modificationPrompt: modificationPrompt
+      };
+
+    } catch (genkitError) {
+      logger.error('Genkit error during section modification:', genkitError);
+      
+      // Fallback: Simple text replacement approach
+      logger.info('Using fallback modification approach');
+      
+      const fallbackModification = `## ${sectionTitle}\n\n${sectionContent}\n\n**Modification Note:** ${modificationPrompt}\n\n*This section has been marked for modification. Please regenerate for full AI-powered modification.*`;
+      
+      // Replace the section in the original idea
+      const sectionRegex = new RegExp(`## ${sectionTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\s\S]*?(?=## |$)`, 'i');
+      const modifiedIdea = originalIdea.replace(sectionRegex, fallbackModification);
+      
+      return {
+        success: true,
+        modifiedIdea: modifiedIdea,
+        originalSection: sectionContent,
+        modificationPrompt: modificationPrompt,
+        fallback: true
+      };
+    }
+
+  } catch (error) {
+    logger.error('Error modifying idea section:', error);
+    return { success: false, error: 'Failed to modify section. Please try again.' };
   }
 });
 

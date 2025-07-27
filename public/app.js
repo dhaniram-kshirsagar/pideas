@@ -305,16 +305,138 @@ const CollapsibleSection = ({ title, content, isExpanded, onToggle, icon, isSpec
     );
 };
 
-// Project Idea Display Component with Collapsible Sections
-const ProjectIdeaDisplay = ({ idea, onStartNew }) => {
-    const [expandedSections, setExpandedSections] = useState(new Set());
+// Sidebar Navigation Component
+const SidebarNavigation = ({ sections, selectedSection, onSectionSelect, isModifying }) => {
+    return (
+        <div className="w-80 bg-gray-900/80 border-r border-gray-700/50 h-full overflow-y-auto">
+            <div className="p-6 border-b border-gray-700/50">
+                <h3 className="text-lg font-semibold text-white mb-2">Project Sections</h3>
+                <p className="text-xs text-gray-400">Select a section to view or modify</p>
+            </div>
+            
+            <div className="p-4 space-y-2">
+                {sections.map((section) => (
+                    <button
+                        key={section.id}
+                        onClick={() => onSectionSelect(section.id)}
+                        className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${
+                            selectedSection === section.id
+                                ? 'bg-blue-600/20 border border-blue-500/40 text-white'
+                                : 'bg-gray-800/40 border border-gray-700/30 text-gray-300 hover:bg-gray-800/60 hover:text-white'
+                        }`}
+                    >
+                        <div className="flex items-center gap-3">
+                            <span className="text-lg">{section.icon}</span>
+                            <div className="flex-1">
+                                <div className="font-medium text-sm">{section.title}</div>
+                                <div className="text-xs text-gray-400 mt-1">
+                                    {section.content.split('\n').length} lines
+                                </div>
+                            </div>
+                            {isModifying && selectedSection === section.id && (
+                                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                            )}
+                        </div>
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+// Section Editor Component
+const SectionEditor = ({ section, onModify, isLoading }) => {
+    const [editPrompt, setEditPrompt] = useState('');
+    const [showEditor, setShowEditor] = useState(false);
+
+    const handleModify = () => {
+        if (editPrompt.trim()) {
+            onModify(section.id, editPrompt.trim());
+            setEditPrompt('');
+            setShowEditor(false);
+        }
+    };
+
+    return (
+        <div className="flex-1 p-6">
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                    <span className="text-2xl">{section.icon}</span>
+                    <h2 className="text-xl font-semibold text-white">{section.title}</h2>
+                </div>
+                <button
+                    onClick={() => setShowEditor(!showEditor)}
+                    disabled={isLoading}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        showEditor
+                            ? 'bg-red-600/20 border border-red-500/40 text-red-400 hover:bg-red-600/30'
+                            : 'bg-blue-600/20 border border-blue-500/40 text-blue-400 hover:bg-blue-600/30'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                    {isLoading ? 'Modifying...' : showEditor ? 'Cancel Edit' : 'Modify Section'}
+                </button>
+            </div>
+
+            {/* Section Content */}
+            <div className="bg-gray-800/40 rounded-lg p-6 border border-gray-700/30 mb-6">
+                <div className="text-gray-200 whitespace-pre-wrap leading-relaxed text-sm">
+                    {section.content}
+                </div>
+            </div>
+
+            {/* Modification Interface */}
+            {showEditor && (
+                <div className="bg-gray-900/60 rounded-lg p-6 border border-blue-500/20">
+                    <h3 className="text-lg font-medium text-white mb-4">Modify This Section</h3>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                                Describe your changes:
+                            </label>
+                            <textarea
+                                value={editPrompt}
+                                onChange={(e) => setEditPrompt(e.target.value)}
+                                placeholder="e.g., 'Make this more beginner-friendly', 'Add more technical details', 'Focus on mobile development'..."
+                                className="w-full h-32 bg-gray-800/60 border border-gray-600/50 rounded-lg p-4 text-white placeholder-gray-400 focus:border-blue-500/50 focus:outline-none resize-none"
+                                disabled={isLoading}
+                            />
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleModify}
+                                disabled={!editPrompt.trim() || isLoading}
+                                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                            >
+                                {isLoading ? 'Regenerating...' : 'Regenerate Section'}
+                            </button>
+                            <button
+                                onClick={() => setShowEditor(false)}
+                                disabled={isLoading}
+                                className="bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// Enhanced Project Idea Display Component with Modification System
+const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
     const [sections, setSections] = useState([]);
+    const [selectedSection, setSelectedSection] = useState(null);
+    const [isModifying, setIsModifying] = useState(false);
+    const [currentIdea, setCurrentIdea] = useState(idea);
+    const [modificationHistory, setModificationHistory] = useState([]);
 
     // Parse the idea text into sections
     useEffect(() => {
-        if (!idea) return;
+        if (!currentIdea) return;
         
-        const lines = idea.split('\n');
+        const lines = currentIdea.split('\n');
         const parsedSections = [];
         let currentSection = null;
         let titleSection = null;
@@ -391,10 +513,11 @@ const ProjectIdeaDisplay = ({ idea, onStartNew }) => {
         
         setSections(parsedSections);
         
-        // Expand the combined title/overview section by default
-        const defaultExpanded = new Set(['title-overview']);
-        setExpandedSections(defaultExpanded);
-    }, [idea]);
+        // Select first section by default
+        if (parsedSections.length > 0 && !selectedSection) {
+            setSelectedSection(parsedSections[0].id);
+        }
+    }, [currentIdea]);
 
     // Get appropriate icon for section
     const getSectionIcon = (title) => {
@@ -410,115 +533,162 @@ const ProjectIdeaDisplay = ({ idea, onStartNew }) => {
         return '📄';
     };
 
-    const toggleSection = (sectionId) => {
-        setExpandedSections(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(sectionId)) {
-                newSet.delete(sectionId);
+    // Handle section modification
+    const handleSectionModify = async (sectionId, modificationPrompt) => {
+        if (!user) {
+            alert('Please log in to modify ideas.');
+            return;
+        }
+
+        setIsModifying(true);
+        
+        try {
+            const section = sections.find(s => s.id === sectionId);
+            if (!section) return;
+
+            // Add to modification history
+            const modification = {
+                id: Date.now(),
+                sectionId,
+                sectionTitle: section.title,
+                prompt: modificationPrompt,
+                timestamp: new Date().toISOString(),
+                originalContent: section.content
+            };
+            setModificationHistory(prev => [...prev, modification]);
+
+            // Call backend to modify the section
+            const modifySection = firebase.functions().httpsCallable('modifyIdeaSection');
+            const result = await modifySection({
+                userId: user.uid,
+                originalIdea: currentIdea,
+                sectionTitle: section.title,
+                sectionContent: section.content,
+                modificationPrompt: modificationPrompt
+            });
+
+            if (result.data.success) {
+                // Update the current idea with the modified section
+                setCurrentIdea(result.data.modifiedIdea);
+                
+                // Auto-save the modified idea to history
+                const saveToHistory = firebase.functions().httpsCallable('saveIdeaToHistory');
+                await saveToHistory({
+                    userId: user.uid,
+                    idea: result.data.modifiedIdea,
+                    context: {
+                        modification: true,
+                        modifiedSection: section.title,
+                        modificationPrompt: modificationPrompt
+                    }
+                });
             } else {
-                newSet.add(sectionId);
+                throw new Error(result.data.error || 'Failed to modify section');
             }
-            return newSet;
-        });
+        } catch (error) {
+            console.error('Error modifying section:', error);
+            alert('Failed to modify section. Please try again.');
+        } finally {
+            setIsModifying(false);
+        }
     };
 
-    const expandAll = () => {
-        setExpandedSections(new Set(sections.map(s => s.id)));
+    // Handle section selection
+    const handleSectionSelect = (sectionId) => {
+        setSelectedSection(sectionId);
     };
 
-    const collapseAll = () => {
-        setExpandedSections(new Set());
+    // Get selected section
+    const selectedSectionData = sections.find(s => s.id === selectedSection);
+
+    // Reset to original idea
+    const handleResetToOriginal = () => {
+        if (confirm('Are you sure you want to reset to the original idea? All modifications will be lost.')) {
+            setCurrentIdea(idea);
+            setModificationHistory([]);
+        }
     };
 
     return (
-        <div className="max-w-5xl mx-auto">
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-gray-900">
             {/* Header */}
-            <div className="bg-gradient-to-r from-gray-900/80 to-gray-800/80 backdrop-blur-sm border border-purple-500/30 rounded-xl p-6 mb-6 shadow-2xl">
-                <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl flex items-center justify-center">
-                            <span className="text-white text-xl font-bold">💡</span>
-                        </div>
-                        <h2 className="text-2xl font-semibold text-white">
-                            Your Personalized Project Idea
-                        </h2>
+            <div className="bg-gray-900/80 border-b border-gray-700/50 p-6">
+                <div className="max-w-7xl mx-auto flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-semibold text-white">Your Personalized Project Idea</h1>
+                        <p className="text-sm text-gray-400 mt-1">
+                            Select sections from the sidebar to view and modify your project idea
+                        </p>
                     </div>
-                    <div className="flex gap-3">
-                        <div className="bg-green-500/10 border border-green-500/30 text-green-400 px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-2">
-                            <span>✓</span>
-                            <span>Saved</span>
-                        </div>
+                    <div className="flex items-center gap-3">
+                        {modificationHistory.length > 0 && (
+                            <button
+                                onClick={handleResetToOriginal}
+                                className="bg-gray-700/60 hover:bg-gray-600/60 text-gray-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-600/40"
+                            >
+                                Reset to Original
+                            </button>
+                        )}
                         <button
                             onClick={onStartNew}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-md text-sm font-medium transition-colors"
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
                         >
                             Generate New Idea
                         </button>
                     </div>
                 </div>
-                
-                {/* Section Controls */}
-                <div className="flex items-center justify-between pt-4 border-t border-gray-700/30">
-                    <div className="flex items-center gap-6 text-xs text-gray-400">
-                        <span>{sections.length} sections</span>
-                        <span>{expandedSections.size} expanded</span>
-                    </div>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={expandAll}
-                            className="bg-gray-800/60 hover:bg-gray-700/60 text-gray-300 hover:text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors border border-gray-700/40"
-                        >
-                            Expand All
-                        </button>
-                        <button
-                            onClick={collapseAll}
-                            className="bg-gray-800/60 hover:bg-gray-700/60 text-gray-300 hover:text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors border border-gray-700/40"
-                        >
-                            Collapse All
-                        </button>
-                    </div>
-                </div>
             </div>
 
-            {/* Collapsible Sections */}
-            <div className="space-y-6">
-                {sections.map((section) => (
-                    <CollapsibleSection
-                        key={section.id}
-                        title={section.title}
-                        content={section.content}
-                        isExpanded={expandedSections.has(section.id)}
-                        onToggle={() => toggleSection(section.id)}
-                        icon={section.icon}
-                        isSpecial={section.isSpecial || false}
+            {/* Main Content */}
+            <div className="max-w-7xl mx-auto h-[calc(100vh-120px)] flex">
+                {/* Sidebar */}
+                <SidebarNavigation 
+                    sections={sections}
+                    selectedSection={selectedSection}
+                    onSectionSelect={handleSectionSelect}
+                    isModifying={isModifying}
+                />
+
+                {/* Main Content Area */}
+                {selectedSectionData ? (
+                    <SectionEditor 
+                        section={selectedSectionData}
+                        onModify={handleSectionModify}
+                        isLoading={isModifying}
                     />
-                ))}
+                ) : (
+                    <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center text-gray-400">
+                            <div className="text-6xl mb-4">📋</div>
+                            <h3 className="text-xl font-medium mb-2">Select a Section</h3>
+                            <p className="text-sm">Choose a section from the sidebar to view and modify</p>
+                        </div>
+                    </div>
+                )}
             </div>
 
-            {/* Usage Guide */}
-            <div className="mt-6 bg-gray-900/40 border border-gray-700/30 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-gray-300 mb-3">
-                    Usage Guide
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-gray-400">
-                    <div className="flex items-center gap-2">
-                        <span className="w-1 h-1 bg-blue-500 rounded-full"></span>
-                        <span>Click headers to expand/collapse sections</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="w-1 h-1 bg-blue-500 rounded-full"></span>
-                        <span>Use controls above to expand/collapse all</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="w-1 h-1 bg-blue-500 rounded-full"></span>
-                        <span>Essential information is highlighted</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="w-1 h-1 bg-blue-500 rounded-full"></span>
-                        <span>Project ideas are automatically saved</span>
+            {/* Modification History Panel (if any modifications) */}
+            {modificationHistory.length > 0 && (
+                <div className="bg-gray-900/60 border-t border-gray-700/50 p-4">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="flex items-center gap-2 mb-3">
+                            <span className="text-sm font-medium text-gray-300">Modification History:</span>
+                            <span className="text-xs text-gray-400">({modificationHistory.length} changes)</span>
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto pb-2">
+                            {modificationHistory.map((mod) => (
+                                <div key={mod.id} className="flex-shrink-0 bg-gray-800/60 rounded-lg p-3 border border-gray-700/40 min-w-64">
+                                    <div className="text-xs font-medium text-blue-400">{mod.sectionTitle}</div>
+                                    <div className="text-xs text-gray-400 mt-1 line-clamp-2">{mod.prompt}</div>
+                                    <div className="text-xs text-gray-500 mt-2">
+                                        {new Date(mod.timestamp).toLocaleTimeString()}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };
