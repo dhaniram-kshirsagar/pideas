@@ -794,7 +794,7 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-gray-900">
+        <div className="h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-gray-900 flex flex-col">
             {/* Header */}
             <div className="bg-gray-900/80 border-b border-gray-700/50 p-6">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -824,41 +824,44 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
             </div>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto h-[calc(100vh-120px)] flex">
-                {/* Sidebar */}
-                <SidebarNavigation 
-                    sections={sections}
-                    selectedSection={selectedSection}
-                    onSectionSelect={handleSectionSelect}
-                    isModifying={isModifying}
-                />
-
-                {/* Main Content Area */}
-                {selectedSectionData ? (
-                    <SectionEditor 
-                        section={selectedSectionData}
-                        onModify={handleSectionModify}
-                        isLoading={isModifying}
+            <div className="max-w-7xl mx-auto flex-1 flex flex-col">
+                <div className="flex flex-1 min-h-0">
+                    {/* Sidebar */}
+                    <SidebarNavigation 
+                        sections={sections}
+                        selectedSection={selectedSection}
+                        onSectionSelect={handleSectionSelect}
+                        isModifying={isModifying}
                     />
-                ) : (
-                    <div className="flex-1 flex items-center justify-center">
-                        <div className="text-center text-gray-400">
-                            <div className="text-6xl mb-4">📋</div>
-                            <h3 className="text-xl font-medium mb-2">Select a Section</h3>
-                            <p className="text-sm">Choose a section from the sidebar to view and modify</p>
+
+                    {/* Main Content Area */}
+                    {selectedSectionData ? (
+                        <SectionEditor 
+                            section={selectedSectionData}
+                            onModify={handleSectionModify}
+                            isLoading={isModifying}
+                        />
+                    ) : (
+                        <div className="flex-1 flex items-center justify-center">
+                            <div className="text-center text-gray-400">
+                                <div className="text-6xl mb-4">📋</div>
+                                <h3 className="text-xl font-medium mb-2">Select a Section</h3>
+                                <p className="text-sm">Choose a section from the sidebar to view and modify</p>
+                            </div>
                         </div>
+                    )}
+                </div>
+                
+                {/* Chat Input for Overall Idea Modification */}
+                <div className="bg-red-900/80 border-t-4 border-red-500 p-6 min-h-[200px]">
+                    <div className="bg-yellow-500/20 p-4 rounded-lg">
+                        <h2 className="text-white text-xl mb-4">🚨 DEBUG: Chat Interface Should Be Here</h2>
+                        <ChatModificationInterface 
+                            onModifyIdea={handleOverallIdeaModify}
+                            isLoading={isModifying}
+                            user={user}
+                        />
                     </div>
-                )}
-            </div>
-
-            {/* Chat Input for Overall Idea Modification */}
-            <div className="bg-gray-900/80 border-t border-gray-700/50 p-6">
-                <div className="max-w-7xl mx-auto">
-                    <ChatModificationInterface 
-                        onModifyIdea={handleOverallIdeaModify}
-                        isLoading={isModifying}
-                        user={user}
-                    />
                 </div>
             </div>
 
