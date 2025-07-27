@@ -349,6 +349,8 @@ const ChatModificationInterface = ({ onModifyIdea, isLoading, user }) => {
     const [chatInput, setChatInput] = useState('');
     const [chatHistory, setChatHistory] = useState([]);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isMinimized, setIsMinimized] = useState(false);
+    const chatInputRef = useRef(null);
 
     const handleSendMessage = async () => {
         if (!chatInput.trim() || isLoading || !user) return;
@@ -390,82 +392,109 @@ const ChatModificationInterface = ({ onModifyIdea, isLoading, user }) => {
             handleSendMessage();
         }
     };
+    
+    const toggleMinimize = () => {
+        setIsMinimized(!isMinimized);
+        if (isMinimized) {
+            // Focus the input when maximizing
+            setTimeout(() => {
+                if (chatInputRef.current) {
+                    chatInputRef.current.focus();
+                }
+            }, 100);
+        }
+    };
 
     return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                    <span className="text-blue-400">💬</span>
-                    Modify Entire Idea
-                </h3>
-                {chatHistory.length > 0 && (
-                    <button
-                        onClick={() => setIsExpanded(!isExpanded)}
-                        className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1"
+        <div className="relative">
+            {/* Header bar - always visible */}
+            <div className="flex items-center justify-between bg-gray-800/80 border-b border-gray-700/50 px-4 py-2 rounded-t-lg">
+                <div className="flex items-center gap-2">
+                    <span className="text-blue-400 text-lg">💬</span>
+                    <h3 className="font-medium text-white">Modify Entire Idea</h3>
+                </div>
+                <div className="flex items-center gap-2">
+                    {chatHistory.length > 0 && (
+                        <button
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-700/50"
+                        >
+                            {isExpanded ? 'Hide History' : 'Show History'} ({chatHistory.length})
+                        </button>
+                    )}
+                    <button 
+                        onClick={toggleMinimize}
+                        className="text-gray-400 hover:text-white transition-colors p-1 rounded hover:bg-gray-700/50"
                     >
-                        {isExpanded ? '▼' : '▶'} Chat History ({chatHistory.length})
+                        {isMinimized ? '▲' : '▼'}
                     </button>
-                )}
+                </div>
             </div>
 
-            {/* Chat History (expandable) */}
-            {isExpanded && chatHistory.length > 0 && (
-                <div className="bg-gray-800/40 rounded-lg p-4 max-h-64 overflow-y-auto space-y-3">
-                    {chatHistory.map((message) => (
-                        <div key={message.id} className={`flex gap-3 ${
-                            message.type === 'user' ? 'justify-end' : 'justify-start'
-                        }`}>
-                            <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                                message.type === 'user' 
-                                    ? 'bg-blue-600 text-white' 
-                                    : message.type === 'error'
-                                    ? 'bg-red-600/80 text-white'
-                                    : 'bg-gray-700 text-gray-100'
-                            }`}>
-                                <p className="text-sm">{message.content}</p>
-                                <p className="text-xs opacity-70 mt-1">
-                                    {new Date(message.timestamp).toLocaleTimeString()}
-                                </p>
-                            </div>
+            {/* Collapsible content */}
+            {!isMinimized && (
+                <div className="space-y-3 px-4 py-3">
+                    {/* Chat History (expandable) */}
+                    {isExpanded && chatHistory.length > 0 && (
+                        <div className="bg-gray-800/40 rounded-lg p-3 max-h-48 overflow-y-auto space-y-2 border border-gray-700/30">
+                            {chatHistory.map((message) => (
+                                <div key={message.id} className={`flex gap-2 ${
+                                    message.type === 'user' ? 'justify-end' : 'justify-start'
+                                }`}>
+                                    <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg text-sm ${
+                                        message.type === 'user' 
+                                            ? 'bg-blue-600 text-white' 
+                                            : message.type === 'error'
+                                            ? 'bg-red-600/80 text-white'
+                                            : 'bg-gray-700 text-gray-100'
+                                    }`}>
+                                        <p>{message.content}</p>
+                                        <p className="text-xs opacity-70 mt-1">
+                                            {new Date(message.timestamp).toLocaleTimeString()}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    ))}
+                    )}
+
+                    {/* Chat Input */}
+                    <div className="flex gap-2">
+                        <div className="flex-1">
+                            <textarea
+                                ref={chatInputRef}
+                                value={chatInput}
+                                onChange={(e) => setChatInput(e.target.value)}
+                                onKeyPress={handleKeyPress}
+                                placeholder="How would you like to modify the idea? (Press Enter to send)"
+                                className="w-full bg-gray-800/60 border border-gray-700/50 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 resize-none text-sm"
+                                rows={2}
+                                disabled={isLoading || !user}
+                            />
+                            {!user && (
+                                <p className="text-xs text-gray-500 mt-1">Please log in to modify ideas</p>
+                            )}
+                        </div>
+                        <button
+                            onClick={handleSendMessage}
+                            disabled={!chatInput.trim() || isLoading || !user}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center gap-1 self-end h-10"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    <span className="text-sm">Working...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="text-sm">Send</span>
+                                    <span className="text-xs opacity-70">↵</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
             )}
-
-            {/* Chat Input */}
-            <div className="flex gap-3">
-                <div className="flex-1">
-                    <textarea
-                        value={chatInput}
-                        onChange={(e) => setChatInput(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        placeholder="Describe how you'd like to modify the entire project idea... (e.g., 'Make it more focused on mobile development' or 'Add AI/ML components')"
-                        className="w-full bg-gray-800/60 border border-gray-700/50 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 resize-none"
-                        rows={3}
-                        disabled={isLoading || !user}
-                    />
-                    {!user && (
-                        <p className="text-xs text-gray-500 mt-1">Please log in to modify ideas</p>
-                    )}
-                </div>
-                <button
-                    onClick={handleSendMessage}
-                    disabled={!chatInput.trim() || isLoading || !user}
-                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center gap-2 self-end"
-                >
-                    {isLoading ? (
-                        <>
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            <span>Modifying...</span>
-                        </>
-                    ) : (
-                        <>
-                            <span>Send</span>
-                            <span className="text-sm opacity-70">↵</span>
-                        </>
-                    )}
-                </button>
-            </div>
         </div>
     );
 };
@@ -861,8 +890,8 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                     )}
                 </div>
                 
-                {/* Chat Input for Overall Idea Modification */}
-                <div className="bg-gray-900/80 border-t border-gray-700/50 p-6 min-h-[200px]">
+                {/* Fixed Chat Input for Overall Idea Modification - Always accessible */}
+                <div className="sticky bottom-0 left-0 right-0 bg-gray-900/95 border-t border-gray-700/50 p-4 shadow-lg z-20">
                     <ChatModificationInterface 
                         onModifyIdea={handleOverallIdeaModify}
                         isLoading={isModifying}
