@@ -579,7 +579,10 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                     } else if (titleLower.includes('overview')) {
                         overviewSection = currentSection;
                     } else {
-                        parsedSections.push(currentSection);
+                        // Only add sections with content
+                        if (currentSection.content.trim()) {
+                            parsedSections.push(currentSection);
+                        }
                     }
                 }
                 
@@ -615,7 +618,10 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
             } else if (titleLower.includes('overview')) {
                 overviewSection = currentSection;
             } else {
-                parsedSections.push(currentSection);
+                // Only add sections with content
+                if (currentSection.content.trim()) {
+                    parsedSections.push(currentSection);
+                }
             }
         }
         
@@ -626,15 +632,18 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                 overviewSection?.content || ''
             ].filter(Boolean).join('\n\n');
             
-            const combinedSection = {
-                id: 'title-overview',
-                title: 'Project Title & Overview',
-                content: combinedContent,
-                icon: '💡',
-                isSpecial: true
-            };
-            
-            parsedSections.unshift(combinedSection);
+            // Only add combined section if it has content
+            if (combinedContent.trim()) {
+                const combinedSection = {
+                    id: 'title-overview',
+                    title: 'Project Title & Overview',
+                    content: combinedContent,
+                    icon: '💡',
+                    isSpecial: true
+                };
+                
+                parsedSections.unshift(combinedSection);
+            }
         }
         
         setSections(parsedSections);
@@ -853,15 +862,12 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                 </div>
                 
                 {/* Chat Input for Overall Idea Modification */}
-                <div className="bg-red-900/80 border-t-4 border-red-500 p-6 min-h-[200px]">
-                    <div className="bg-yellow-500/20 p-4 rounded-lg">
-                        <h2 className="text-white text-xl mb-4">🚨 DEBUG: Chat Interface Should Be Here</h2>
-                        <ChatModificationInterface 
-                            onModifyIdea={handleOverallIdeaModify}
-                            isLoading={isModifying}
-                            user={user}
-                        />
-                    </div>
+                <div className="bg-gray-900/80 border-t border-gray-700/50 p-6 min-h-[200px]">
+                    <ChatModificationInterface 
+                        onModifyIdea={handleOverallIdeaModify}
+                        isLoading={isModifying}
+                        user={user}
+                    />
                 </div>
             </div>
 
