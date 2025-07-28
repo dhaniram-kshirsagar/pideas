@@ -308,28 +308,28 @@ const CollapsibleSection = ({ title, content, isExpanded, onToggle, icon, isSpec
 // Sidebar Navigation Component
 const SidebarNavigation = ({ sections, selectedSection, onSectionSelect, isModifying }) => {
     return (
-        <div className="w-80 bg-gray-900/80 border-r border-gray-700/50 h-full overflow-y-auto">
-            <div className="p-6 border-b border-gray-700/50">
-                <h3 className="text-lg font-semibold text-white mb-2">Project Sections</h3>
+        <div className="w-80 bg-gray-900/80 border-r border-gray-700/50 h-full flex flex-col">
+            <div className="p-4 border-b border-gray-700/50 shrink-0">
+                <h3 className="text-lg font-semibold text-white mb-1">Project Sections</h3>
                 <p className="text-xs text-gray-400">Select a section to view or modify</p>
             </div>
             
-            <div className="p-4 space-y-2">
+            <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent flex-1 p-3 space-y-1">
                 {sections.map((section) => (
                     <button
                         key={section.id}
                         onClick={() => onSectionSelect(section.id)}
-                        className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${
+                        className={`w-full text-left p-2 rounded-lg transition-all duration-200 ${
                             selectedSection === section.id
                                 ? 'bg-blue-600/20 border border-blue-500/40 text-white'
                                 : 'bg-gray-800/40 border border-gray-700/30 text-gray-300 hover:bg-gray-800/60 hover:text-white'
                         }`}
                     >
-                        <div className="flex items-center gap-3">
-                            <span className="text-lg">{section.icon}</span>
-                            <div className="flex-1">
-                                <div className="font-medium text-sm">{section.title}</div>
-                                <div className="text-xs text-gray-400 mt-1">
+                        <div className="flex items-center gap-2">
+                            <span className="text-base">{section.icon}</span>
+                            <div className="flex-1 truncate">
+                                <div className="font-medium text-sm truncate">{section.title}</div>
+                                <div className="text-xs text-gray-400">
                                     {section.content.split('\n').length} lines
                                 </div>
                             </div>
@@ -890,8 +890,8 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                     )}
                 </div>
                 
-                {/* Fixed Chat Input for Overall Idea Modification - Always accessible */}
-                <div className="sticky bottom-0 left-0 right-0 bg-gray-900/95 border-t border-gray-700/50 p-4 shadow-lg z-20">
+                {/* Fixed Chat Input for Overall Idea Modification - Only covers details area */}
+                <div className="sticky bottom-0 right-0 left-80 bg-gray-900/95 border-t border-gray-700/50 p-4 shadow-lg z-20">
                     <ChatModificationInterface 
                         onModifyIdea={handleOverallIdeaModify}
                         isLoading={isModifying}
