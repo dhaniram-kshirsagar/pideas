@@ -5,6 +5,7 @@ Converted from FastAPI to Firebase Functions while maintaining all functionality
 
 import json
 import os
+import re
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 
@@ -356,38 +357,34 @@ def generateProjectIdea(req: https_fn.CallableRequest) -> Dict[str, Any]:
         **Game Responses Context:**
         {json.dumps(game_responses, indent=2)}
 
-        Please generate a comprehensive project idea that matches their profile and query. The response must be a valid JSON object with the following exact structure:
+        Please generate a comprehensive project idea that matches their profile and query.
+        
+        CRITICAL FORMATTING REQUIREMENTS:
+        - Return ONLY valid JSON
+        - Use double quotes for all strings
+        - No trailing commas
+        - No comments or explanatory text
+        - No markdown formatting
+        - Ensure all JSON brackets and braces are properly closed
+        
+        The response must be a valid JSON object with this exact structure:
 
         {{
           "title": "Project Title",
           "overview": "Brief project description",
           "objectives": ["Objective 1", "Objective 2", "Objective 3"],
-          "technicalRequirements": {{
-            "technologies": ["Tech1", "Tech2"],
-            "skillsRequired": ["Skill1", "Skill2"],
-            "difficulty": "Beginner/Intermediate/Advanced"
-          }},
           "technologies": ["Tech1", "Tech2", "Tech3"],
           "skillsRequired": ["Skill1", "Skill2", "Skill3"],
-          "difficulty": "Beginner/Intermediate/Advanced",
-          "projectStructure": {{
-            "phases": [
-              {{
-                "name": "Phase 1: Planning & Setup",
-                "duration": "Week 1",
-                "tasks": ["Task 1", "Task 2", "Task 3"]
-              }},
-              {{
-                "name": "Phase 2: Core Development",
-                "duration": "Weeks 2-X",
-                "tasks": ["Task 1", "Task 2", "Task 3"]
-              }}
-            ]
-          }},
+          "difficulty": "Beginner",
           "phases": [
             {{
               "name": "Phase 1: Planning & Setup",
               "duration": "Week 1",
+              "tasks": ["Task 1", "Task 2", "Task 3"]
+            }},
+            {{
+              "name": "Phase 2: Core Development",
+              "duration": "Weeks 2-3",
               "tasks": ["Task 1", "Task 2", "Task 3"]
             }}
           ],
@@ -401,14 +398,14 @@ def generateProjectIdea(req: https_fn.CallableRequest) -> Dict[str, Any]:
           "variations": ["Variation 1", "Variation 2"]
         }}
 
-        Make sure the project is:
+        Project requirements:
         1. Appropriate for their skill level and academic year
         2. Achievable within their preferred timeframe
         3. Aligned with their technology preferences
         4. Suitable for their preferred team size
         5. Relevant to their interests and domain preferences
 
-        Return ONLY the JSON object, no additional text or formatting.
+        RESPOND WITH ONLY THE JSON OBJECT - NO OTHER TEXT.
         """
         
         # Generate content using Gemini
@@ -454,15 +451,55 @@ def generateProjectIdea(req: https_fn.CallableRequest) -> Dict[str, Any]:
         
         # Parse JSON response
         try:
-            idea_data = json.loads(response.text.strip())
-        except json.JSONDecodeError:
-            # Try to extract JSON from response if it's wrapped in markdown
+            print(f"Raw Gemini response: {response.text[:500]}...")  # Log first 500 chars
+            
+            # Clean the response text
             text = response.text.strip()
+            
+            # Remove markdown code blocks if present
             if text.startswith('```json'):
                 text = text[7:]
+            elif text.startswith('```'):
+                text = text[3:]
+            
             if text.endswith('```'):
                 text = text[:-3]
-            idea_data = json.loads(text.strip())
+            
+            # Remove any leading/trailing whitespace
+            text = text.strip()
+            
+            # Try to find JSON object boundaries
+            start_idx = text.find('{')
+            end_idx = text.rfind('}') + 1
+            
+            if start_idx != -1 and end_idx > start_idx:
+                text = text[start_idx:end_idx]
+            
+            print(f"Cleaned JSON text: {text[:200]}...")  # Log first 200 chars of cleaned text
+            
+            idea_data = json.loads(text)
+            
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {str(e)}")
+            print(f"Problematic text: {text}")
+            
+            # Try to fix common JSON issues
+            try:
+                # Replace single quotes with double quotes
+                fixed_text = text.replace("'", '"')
+                # Remove trailing commas
+                fixed_text = re.sub(r',\s*}', '}', fixed_text)
+                fixed_text = re.sub(r',\s*]', ']', fixed_text)
+                
+                idea_data = json.loads(fixed_text)
+                print("Successfully parsed JSON after fixing common issues")
+                
+            except json.JSONDecodeError as e2:
+                print(f"Failed to parse JSON even after fixes: {str(e2)}")
+                raise https_fn.HttpsError(
+                    code=https_fn.FunctionsErrorCode.INTERNAL,
+                    message=f"Invalid JSON response from Gemini AI: {str(e)}"
+                )
         
         # Validate structure
         if not is_valid_project_idea(idea_data):
@@ -534,7 +571,7 @@ def saveIdeaToHistory(req: https_fn.CallableRequest) -> Dict[str, Any]:
             'createdAt': firestore.SERVER_TIMESTAMP
         }
         
-        db.collection('projectHistory').add(history_data)
+        db.collection('project_history').add(history_data)
         
         return {
             "success": True,
