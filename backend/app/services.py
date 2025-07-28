@@ -257,7 +257,7 @@ class ProjectIdeaService:
             """
             
             # Generate content using Gemini
-            model = genai.GenerativeModel('gemini-pro')
+            model = genai.GenerativeModel('gemini-2.5-flash')
             response = model.generate_content(prompt)
             
             if not response.text:

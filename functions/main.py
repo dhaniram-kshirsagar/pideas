@@ -414,7 +414,7 @@ def generateProjectIdea(req: https_fn.CallableRequest) -> Dict[str, Any]:
         # Generate content using Gemini
         try:
             print("Initializing Gemini model...")
-            model = genai.GenerativeModel('gemini-pro')
+            model = genai.GenerativeModel('gemini-2.5-flash')
             
             print("Sending request to Gemini API...")
             response = model.generate_content(prompt)
