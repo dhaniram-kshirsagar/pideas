@@ -1,0 +1,34 @@
+# Google Cloud Build configuration for Firebase deployment
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/project-idea-generator:$BUILD_ID', '.']
+  
+  # Push the Docker image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/project-idea-generator:$BUILD_ID']
+  
+  # Deploy to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'project-idea-generator'
+      - '--image=gcr.io/$PROJECT_ID/project-idea-generator:$BUILD_ID'
+      - '--region=us-central1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars=FIREBASE_PROJECT_ID=$PROJECT_ID'
+      - '--memory=1Gi'
+      - '--cpu=1'
+      - '--max-instances=10'
+      - '--timeout=300'
+
+# Specify the Docker image to be built
+images:
+  - 'gcr.io/$PROJECT_ID/project-idea-generator:$BUILD_ID'
+
+# Build options
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'

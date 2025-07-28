@@ -57,7 +57,7 @@ generateButton.addEventListener('click', async () => {
   
   try {
     // Call the Cloud Function that handles the Gemini API
-    const generateIdea = functions.httpsCallable('generateIdea');
+    const generateIdea = window.PythonAPI.generateIdea;
     const result = await generateIdea({ query: query });
     
     // Display the result

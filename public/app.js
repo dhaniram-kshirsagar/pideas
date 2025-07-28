@@ -722,7 +722,8 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
             setModificationHistory(prev => [...prev, modification]);
 
             // Call backend to modify the section
-            const modifySection = firebase.functions().httpsCallable('modifyIdeaSection');
+            // Note: modifyIdeaSection not implemented in Python backend yet
+            const modifySection = window.PythonAPI.modifyIdeaSection;
             const result = await modifySection({
                 userId: user.uid,
                 originalIdea: currentIdea,
@@ -736,7 +737,7 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                 setCurrentIdea(result.data.modifiedIdea);
                 
                 // Auto-save the modified idea to history
-                const saveToHistory = firebase.functions().httpsCallable('saveIdeaToHistory');
+                const saveToHistory = window.PythonAPI.saveIdeaToHistory;
                 await saveToHistory({
                     userId: user.uid,
                     idea: result.data.modifiedIdea,
@@ -794,7 +795,8 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
             setModificationHistory(prev => [...prev, modification]);
 
             // Call backend to modify the entire idea
-            const modifySection = firebase.functions().httpsCallable('modifyIdeaSection');
+            // Note: modifyIdeaSection not implemented in Python backend yet
+            const modifySection = window.PythonAPI.modifyIdeaSection;
             const result = await modifySection({
                 userId: user.uid,
                 originalIdea: currentIdea,
@@ -808,7 +810,7 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                 setCurrentIdea(result.data.modifiedIdea);
                 
                 // Auto-save the modified idea to history
-                const saveToHistory = firebase.functions().httpsCallable('saveIdeaToHistory');
+                const saveToHistory = window.PythonAPI.saveIdeaToHistory;
                 await saveToHistory({
                     userId: user.uid,
                     idea: result.data.modifiedIdea,
@@ -940,7 +942,7 @@ const HistoryView = ({ user, onBack, onViewIdea }) => {
             
             try {
                 const functions = firebase.functions();
-                const getUserHistory = functions.httpsCallable('getUserHistory');
+                const getUserHistory = window.PythonAPI.getUserHistory;
                 const result = await getUserHistory({ userId: user.uid });
                 
                 if (result.data.success) {
@@ -1036,7 +1038,7 @@ const AppScreen = ({ user, onLogout }) => {
         }
         
         try {
-            const getUserRole = functions.httpsCallable('getUserRole');
+            const getUserRole = window.PythonAPI.getUserRole;
             const result = await getUserRole({ userId: user.uid });
             
             if (result.data.success) {
@@ -1055,7 +1057,7 @@ const AppScreen = ({ user, onLogout }) => {
         
         setIsLoadingHistory(true);
         try {
-            const getUserHistory = functions.httpsCallable('getUserHistory');
+            const getUserHistory = window.PythonAPI.getUserHistory;
             const result = await getUserHistory({ userId: user.uid });
             
             if (result.data.success) {
@@ -1081,7 +1083,7 @@ const AppScreen = ({ user, onLogout }) => {
         }
 
         try {
-            const getGameSteps = functions.httpsCallable('getGameSteps');
+            const getGameSteps = window.PythonAPI.getGameSteps;
             const result = await getGameSteps({});
             
             if (result.data.success) {
@@ -1138,7 +1140,7 @@ const AppScreen = ({ user, onLogout }) => {
         setIsGenerating(true);
 
         try {
-            const generateIdea = functions.httpsCallable('generateIdea');
+            const generateIdea = window.PythonAPI.generateIdea;
             const result = await generateIdea({ 
                 query: query,
                 studentProfile: profile,
@@ -1160,7 +1162,7 @@ const AppScreen = ({ user, onLogout }) => {
                         gameStepsCount: responses.length
                     });
                     
-                    const saveIdeaToHistory = functions.httpsCallable('saveIdeaToHistory');
+                    const saveIdeaToHistory = window.PythonAPI.saveIdeaToHistory;
                     const saveResult = await saveIdeaToHistory({
                         userId: user.uid,
                         ideaData: {
@@ -1207,7 +1209,7 @@ const AppScreen = ({ user, onLogout }) => {
         if (!functions) return;
         
         try {
-            const saveIdeaToHistory = functions.httpsCallable('saveIdeaToHistory');
+            const saveIdeaToHistory = window.PythonAPI.saveIdeaToHistory;
             await saveIdeaToHistory({
                 userId: user.uid,
                 ideaData: {

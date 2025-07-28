@@ -578,7 +578,7 @@ const AdminConsole = ({ user, onBack }) => {
     const checkAdminAccess = async () => {
         try {
             const functions = firebase.functions();
-            const getUserRole = functions.httpsCallable('getUserRole');
+            const getUserRole = window.PythonAPI.getUserRole;
             const result = await getUserRole({ userId: user.uid });
             
             if (result.data.success) {
@@ -595,19 +595,19 @@ const AdminConsole = ({ user, onBack }) => {
             const functions = firebase.functions();
             
             if (activeTab === 'users') {
-                const getAllUsers = functions.httpsCallable('getAllUsers');
+                const getAllUsers = window.PythonAPI.getAllUsers;
                 const result = await getAllUsers({ adminUserId: user.uid });
                 if (result.data.success) {
                     setUsers(result.data.users);
                 }
             } else if (activeTab === 'ideas') {
-                const getAllIdeas = functions.httpsCallable('getAllIdeas');
+                const getAllIdeas = window.PythonAPI.getAllIdeas;
                 const result = await getAllIdeas({ adminUserId: user.uid });
                 if (result.data.success) {
                     setIdeas(result.data.ideas);
                 }
             } else if (activeTab === 'logs') {
-                const getAdminLogs = functions.httpsCallable('getAdminLogs');
+                const getAdminLogs = window.PythonAPI.getAdminLogs;
                 const result = await getAdminLogs({ adminUserId: user.uid });
                 if (result.data.success) {
                     setLogs(result.data.logs);
@@ -623,7 +623,7 @@ const AdminConsole = ({ user, onBack }) => {
     const handleUpdateUser = async (targetUserId, updates) => {
         try {
             const functions = firebase.functions();
-            const updateUserRole = functions.httpsCallable('updateUserRole');
+            const updateUserRole = window.PythonAPI.updateUserRole;
             const result = await updateUserRole({
                 adminUserId: user.uid,
                 targetUserId,
@@ -642,7 +642,7 @@ const AdminConsole = ({ user, onBack }) => {
     const handleBulkAction = async (bulkData) => {
         try {
             const functions = firebase.functions();
-            const bulkUserOperations = functions.httpsCallable('bulkUserOperations');
+            const bulkUserOperations = window.PythonAPI.bulkUserOperations;
             const result = await bulkUserOperations({
                 adminUserId: user.uid,
                 ...bulkData
@@ -660,7 +660,7 @@ const AdminConsole = ({ user, onBack }) => {
     const handleSearchIdeas = async (searchQuery) => {
         try {
             const functions = firebase.functions();
-            const getAllIdeas = functions.httpsCallable('getAllIdeas');
+            const getAllIdeas = window.PythonAPI.getAllIdeas;
             const result = await getAllIdeas({ 
                 adminUserId: user.uid,
                 searchQuery 
