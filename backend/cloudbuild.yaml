@@ -1,34 +1,36 @@
-# Google Cloud Build configuration for Firebase deployment
+# Google Cloud Build configuration for deploying to Cloud Run
 steps:
-  # Build the Docker image
+  # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/project-idea-generator:$BUILD_ID', '.']
-  
-  # Push the Docker image to Container Registry
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/project-idea-generator:$COMMIT_SHA', '.']
+    
+  # Push the container image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/project-idea-generator:$BUILD_ID']
-  
-  # Deploy to Cloud Run
-  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['push', 'gcr.io/$PROJECT_ID/project-idea-generator:$COMMIT_SHA']
+    
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
     args:
       - 'run'
       - 'deploy'
       - 'project-idea-generator'
-      - '--image=gcr.io/$PROJECT_ID/project-idea-generator:$BUILD_ID'
-      - '--region=us-central1'
-      - '--platform=managed'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/project-idea-generator:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
       - '--allow-unauthenticated'
-      - '--set-env-vars=FIREBASE_PROJECT_ID=$PROJECT_ID'
-      - '--memory=1Gi'
-      - '--cpu=1'
-      - '--max-instances=10'
-      - '--timeout=300'
+      - '--port'
+      - '8000'
+      - '--set-env-vars'
+      - 'GEMINI_API_KEY=${_GEMINI_API_KEY},FIREBASE_PROJECT_ID=${_FIREBASE_PROJECT_ID}'
 
-# Specify the Docker image to be built
+# Substitution variables (set these in Cloud Build trigger)
+substitutions:
+  _GEMINI_API_KEY: 'your-gemini-api-key'
+  _FIREBASE_PROJECT_ID: 'your-firebase-project-id'
+
 images:
-  - 'gcr.io/$PROJECT_ID/project-idea-generator:$BUILD_ID'
-
-# Build options
-options:
-  logging: CLOUD_LOGGING_ONLY
-  machineType: 'E2_HIGHCPU_8'
+  - 'gcr.io/$PROJECT_ID/project-idea-generator:$COMMIT_SHA'
