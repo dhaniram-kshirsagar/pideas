@@ -24,9 +24,35 @@ if not firebase_admin._apps:
 db = firestore.client()
 
 # Initialize Gemini AI
-gemini_api_key = os.environ.get('GEMINI_API_KEY')
+# Try multiple sources for API key
+gemini_api_key = None
+try:
+    # First try environment variable
+    gemini_api_key = os.environ.get('GEMINI_API_KEY')
+    
+    # If not found, try Firebase Functions config (legacy)
+    if not gemini_api_key:
+        try:
+            from firebase_functions import params
+            gemini_api_key = params.StringParam('GEMINI_API_KEY').value
+        except:
+            pass
+    
+    # If still not found, try Firebase config (functions:config)
+    if not gemini_api_key:
+        try:
+            import firebase_functions.params as params
+            gemini_api_key = params.StringParam('GEMINI_API_KEY').value
+        except:
+            pass
+            
+except Exception as e:
+    print(f"Warning: Could not load Gemini API key: {e}")
+
 if gemini_api_key:
     genai.configure(api_key=gemini_api_key)
+else:
+    print("Warning: Gemini API key not configured. Set GEMINI_API_KEY environment variable.")
 
 
 # Helper functions
@@ -298,10 +324,13 @@ def generateProjectIdea(req: https_fn.CallableRequest) -> Dict[str, Any]:
         student_profile = data.get('studentProfile', {})
         game_responses = data.get('gameResponses', [])
         
+        print(f"generateProjectIdea called with data: {json.dumps(data, indent=2)}")
+        
         if not gemini_api_key:
+            print("Error: Gemini API key not configured")
             raise https_fn.HttpsError(
                 code=https_fn.FunctionsErrorCode.FAILED_PRECONDITION,
-                message="Gemini API key not configured"
+                message="Gemini API key not configured. Please set GEMINI_API_KEY environment variable."
             )
         
         # Calculate game score
@@ -383,13 +412,44 @@ def generateProjectIdea(req: https_fn.CallableRequest) -> Dict[str, Any]:
         """
         
         # Generate content using Gemini
-        model = genai.GenerativeModel('gemini-pro')
-        response = model.generate_content(prompt)
-        
-        if not response.text:
+        try:
+            print("Initializing Gemini model...")
+            model = genai.GenerativeModel('gemini-pro')
+            
+            print("Sending request to Gemini API...")
+            response = model.generate_content(prompt)
+            
+            print(f"Gemini response received. Has text: {bool(response.text)}")
+            
+            if not response.text:
+                print("Error: Empty response from Gemini AI")
+                raise https_fn.HttpsError(
+                    code=https_fn.FunctionsErrorCode.INTERNAL,
+                    message="Empty response from Gemini AI"
+                )
+                
+        except Exception as gemini_error:
+            print(f"Gemini API error: {str(gemini_error)}")
+            print(f"Gemini error type: {type(gemini_error)}")
+            
+            # Check if it's an API key issue
+            if "API_KEY" in str(gemini_error).upper() or "INVALID_API_KEY" in str(gemini_error).upper():
+                raise https_fn.HttpsError(
+                    code=https_fn.FunctionsErrorCode.FAILED_PRECONDITION,
+                    message="Invalid or missing Gemini API key. Please check your API key configuration."
+                )
+            
+            # Check if it's a quota/billing issue
+            if "quota" in str(gemini_error).lower() or "billing" in str(gemini_error).lower():
+                raise https_fn.HttpsError(
+                    code=https_fn.FunctionsErrorCode.RESOURCE_EXHAUSTED,
+                    message="Gemini API quota exceeded or billing issue. Please check your Google Cloud billing."
+                )
+            
+            # Generic Gemini API error
             raise https_fn.HttpsError(
                 code=https_fn.FunctionsErrorCode.INTERNAL,
-                message="Empty response from Gemini AI"
+                message=f"Gemini API error: {str(gemini_error)}"
             )
         
         # Parse JSON response
@@ -474,7 +534,7 @@ def saveIdeaToHistory(req: https_fn.CallableRequest) -> Dict[str, Any]:
             'createdAt': firestore.SERVER_TIMESTAMP
         }
         
-        db.collection('project_history').add(history_data)
+        db.collection('projectHistory').add(history_data)
         
         return {
             "success": True,
@@ -521,15 +581,26 @@ def getUserHistory(req: https_fn.CallableRequest) -> Dict[str, Any]:
             )
         
         history_ref = db.collection('project_history')
-        query = history_ref.where('userId', '==', user_id).order_by('createdAt', direction=firestore.Query.DESCENDING).limit(limit)
         
-        docs = query.stream()
+        try:
+            # Try the optimized query first (requires composite index)
+            query = history_ref.where('userId', '==', user_id).order_by('createdAt', direction=firestore.Query.DESCENDING).limit(limit)
+            docs = query.stream()
+        except Exception as e:
+            print(f"Composite index query failed, falling back to simple query: {e}")
+            # Fallback to simple query without ordering (no index required)
+            query = history_ref.where('userId', '==', user_id).limit(limit)
+            docs = query.stream()
+        
         history = []
-        
         for doc in docs:
             doc_data = doc.to_dict()
             doc_data['id'] = doc.id
             history.append(doc_data)
+        
+        # Sort in Python if we couldn't sort in Firestore
+        if 'createdAt' in str(e) if 'e' in locals() else False:
+            history.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
         
         return {
             "success": True,

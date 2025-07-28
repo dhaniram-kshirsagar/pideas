@@ -306,7 +306,7 @@ class HistoryService:
                 'createdAt': firestore.SERVER_TIMESTAMP
             }
             
-            db.collection('project_history').add(history_data)
+            db.collection('projectHistory').add(history_data)
             return True
             
         except Exception as e:
