@@ -321,8 +321,8 @@ const SidebarNavigation = ({ sections, selectedSection, onSectionSelect, isModif
                         onClick={() => onSectionSelect(section.id)}
                         className={`w-full text-left p-2 rounded-lg transition-all duration-200 ${
                             selectedSection === section.id
-                                ? 'bg-blue-600/20 border border-blue-500/40 text-white'
-                                : 'bg-gray-800/40 border border-gray-700/30 text-gray-300 hover:bg-gray-800/60 hover:text-white'
+                                ? 'bg-gray-800/80 border border-gray-600/60 text-white'
+                                : 'bg-gray-900/60 border border-gray-800/40 text-gray-300 hover:bg-gray-800/80 hover:text-white'
                         }`}
                     >
                         <div className="flex items-center gap-2">
@@ -408,23 +408,23 @@ const ChatModificationInterface = ({ onModifyIdea, isLoading, user }) => {
     return (
         <div className="relative">
             {/* Header bar - always visible */}
-            <div className="flex items-center justify-between bg-gray-800/80 border-b border-gray-700/50 px-4 py-2 rounded-t-lg">
+            <div className="flex items-center justify-between bg-black/80 border-b border-gray-800/60 px-4 py-2 rounded-t-lg">
                 <div className="flex items-center gap-2">
-                    <span className="text-blue-400 text-lg">💬</span>
+                    <span className="text-gray-300 text-lg">💬</span>
                     <h3 className="font-medium text-white">Modify Entire Idea</h3>
                 </div>
                 <div className="flex items-center gap-2">
                     {chatHistory.length > 0 && (
                         <button
                             onClick={() => setIsExpanded(!isExpanded)}
-                            className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-700/50"
+                            className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-800/70"
                         >
                             {isExpanded ? 'Hide History' : 'Show History'} ({chatHistory.length})
                         </button>
                     )}
                     <button 
                         onClick={toggleMinimize}
-                        className="text-gray-400 hover:text-white transition-colors p-1 rounded hover:bg-gray-700/50"
+                        className="text-gray-400 hover:text-white transition-colors p-1 rounded hover:bg-gray-800/70"
                     >
                         {isMinimized ? '▲' : '▼'}
                     </button>
@@ -436,17 +436,17 @@ const ChatModificationInterface = ({ onModifyIdea, isLoading, user }) => {
                 <div className="space-y-3 px-4 py-3">
                     {/* Chat History (expandable) */}
                     {isExpanded && chatHistory.length > 0 && (
-                        <div className="bg-gray-800/40 rounded-lg p-3 max-h-48 overflow-y-auto space-y-2 border border-gray-700/30">
+                        <div className="bg-black/50 rounded-lg p-3 max-h-48 overflow-y-auto space-y-2 border border-gray-800/40">
                             {chatHistory.map((message) => (
                                 <div key={message.id} className={`flex gap-2 ${
                                     message.type === 'user' ? 'justify-end' : 'justify-start'
                                 }`}>
                                     <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg text-sm ${
                                         message.type === 'user' 
-                                            ? 'bg-blue-600 text-white' 
+                                            ? 'bg-gray-700 text-white' 
                                             : message.type === 'error'
                                             ? 'bg-red-600/80 text-white'
-                                            : 'bg-gray-700 text-gray-100'
+                                            : 'bg-gray-900 text-gray-100'
                                     }`}>
                                         <p>{message.content}</p>
                                         <p className="text-xs opacity-70 mt-1">
@@ -467,7 +467,7 @@ const ChatModificationInterface = ({ onModifyIdea, isLoading, user }) => {
                                 onChange={(e) => setChatInput(e.target.value)}
                                 onKeyPress={handleKeyPress}
                                 placeholder="How would you like to modify the idea? (Press Enter to send)"
-                                className="w-full bg-gray-800/60 border border-gray-700/50 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 resize-none text-sm"
+                                className="w-full bg-gray-900/70 border border-gray-800/50 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-600/70 focus:border-gray-600/70 resize-none text-sm"
                                 rows={2}
                                 disabled={isLoading || !user}
                             />
@@ -478,7 +478,7 @@ const ChatModificationInterface = ({ onModifyIdea, isLoading, user }) => {
                         <button
                             onClick={handleSendMessage}
                             disabled={!chatInput.trim() || isLoading || !user}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center gap-1 self-end h-10"
+                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center gap-1 self-end h-10 border border-gray-700/50"
                         >
                             {isLoading ? (
                                 <>
@@ -891,7 +891,7 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                 </div>
                 
                 {/* Fixed Chat Input for Overall Idea Modification - Only covers details area */}
-                <div className="sticky bottom-0 right-0 left-80 bg-gray-900/95 border-t border-gray-700/50 p-4 shadow-lg z-20">
+                <div className="sticky bottom-0 right-0 left-80 bg-black/90 border-t border-gray-800/60 p-4 shadow-lg z-20">
                     <ChatModificationInterface 
                         onModifyIdea={handleOverallIdeaModify}
                         isLoading={isModifying}
