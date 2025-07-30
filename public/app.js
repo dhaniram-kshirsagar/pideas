@@ -345,10 +345,11 @@ const DiscoveryOnboarding = ({ onComplete, user }) => {
         
         if (currentStep < discoverySteps.length - 1) {
             // Ensure we wait long enough after the encouragement message before moving to the next step
+            // This should match the timeout in DiscoveryStep (1200ms)
             setTimeout(() => {
                 console.log('Setting current step to:', currentStep + 1);
                 setCurrentStep(currentStep + 1);
-            }, 800);
+            }, 1600);
         } else {
             // Complete the discovery process
             setTimeout(() => {
@@ -414,10 +415,10 @@ const DiscoveryStep = ({ step, onComplete, stepNumber, totalSteps }) => {
     const handleSingleChoice = (value) => {
         setSelectedValue(value);
         setShowEncouragement(true);
-        // Ensure the timeout is long enough to show the encouragement message but not too long
+        // Show encouragement message for a reasonable duration
         setTimeout(() => {
             onComplete({ value });
-        }, 1500);
+        }, 1200);
     };
     
     const handleMultiChoice = (value) => {
@@ -430,20 +431,20 @@ const DiscoveryStep = ({ step, onComplete, stepNumber, totalSteps }) => {
     const handleMultiChoiceSubmit = () => {
         if (selectedValues.length > 0) {
             setShowEncouragement(true);
-            // Ensure the timeout is long enough to show the encouragement message but not too long
+            // Show encouragement message for a reasonable duration
             setTimeout(() => {
                 onComplete({ values: selectedValues });
-            }, 1500);
+            }, 1200);
         }
     };
     
     const handleFormSubmit = () => {
         if (Object.keys(formData).length === step.fields.length) {
             setShowEncouragement(true);
-            // Ensure the timeout is long enough to show the encouragement message but not too long
+            // Show encouragement message for a reasonable duration
             setTimeout(() => {
                 onComplete(formData);
-            }, 1500);
+            }, 1200);
         }
     };
     
