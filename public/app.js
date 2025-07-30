@@ -627,42 +627,66 @@ const PersonalizedIdeaSelection = ({ userProfile, onIdeaSelect, onBackToDiscover
     
     const generatePersonalizedIdeas = async () => {
         setIsGenerating(true);
+        console.log('Generating personalized ideas for profile:', userProfile);
+        
         try {
             // Create a detailed prompt based on user profile
             const prompt = createPersonalizedPrompt(userProfile);
+            console.log('Generated prompt:', prompt);
             
             // Use existing idea generation system
             const generateIdea = firebase.functions().httpsCallable('generateIdea');
-            const result = await generateIdea({ prompt });
+            console.log('Calling Firebase function generateIdea...');
             
-            if (result.data.success) {
+            const result = await generateIdea({ prompt });
+            console.log('Firebase function result:', result);
+            
+            if (result.data && result.data.success) {
+                console.log('Successfully generated ideas, parsing content...');
                 // Parse the generated content into multiple ideas
                 const parsedIdeas = parseMultipleIdeas(result.data.idea);
-                setIdeas(parsedIdeas);
+                console.log('Parsed ideas:', parsedIdeas);
+                
+                if (parsedIdeas && parsedIdeas.length > 0) {
+                    setIdeas(parsedIdeas);
+                } else {
+                    console.warn('No ideas parsed from generated content, using fallback');
+                    setIdeas(generateFallbackIdeas(userProfile));
+                }
             } else {
-                throw new Error(result.data.error || 'Failed to generate ideas');
+                console.error('Firebase function returned error:', result.data?.error);
+                throw new Error(result.data?.error || 'Failed to generate ideas');
             }
         } catch (error) {
             console.error('Error generating personalized ideas:', error);
-            // Fallback to sample ideas
-            setIdeas(generateFallbackIdeas(userProfile));
+            console.log('Using fallback ideas for profile:', userProfile);
+            // Generate personalized fallback ideas based on user profile
+            setIdeas(generatePersonalizedFallbackIdeas(userProfile));
         } finally {
             setIsGenerating(false);
         }
     };
     
     const createPersonalizedPrompt = (profile) => {
-        return `Generate 6-8 diverse project ideas for a ${profile.skillLevel} level student in ${profile.fieldOfStudy}. 
+        // Ensure we have valid profile data
+        const fieldOfStudy = profile.fieldOfStudy || 'Computer Science';
+        const skillLevel = profile.skillLevel || 'intermediate';
+        const interests = Array.isArray(profile.interests) ? profile.interests : [];
+        const timeAvailable = profile.resources?.timeAvailable || '1month';
+        const budget = profile.resources?.budget || 'free';
+        const learningGoals = Array.isArray(profile.learningGoals) ? profile.learningGoals : [];
+        
+        return `Generate 6-8 diverse project ideas for a ${skillLevel} level student in ${fieldOfStudy}. 
         
         User Profile:
-        - Field: ${profile.fieldOfStudy}
-        - Skill Level: ${profile.skillLevel}
-        - Interests: ${profile.interests.join(', ')}
-        - Time Available: ${profile.resources.timeAvailable}
-        - Budget: ${profile.resources.budget}
-        - Learning Goals: ${profile.learningGoals.join(', ')}
+        - Field of Study: ${fieldOfStudy}
+        - Skill Level: ${skillLevel}
+        - Interests: ${interests.length > 0 ? interests.join(', ') : 'General programming'}
+        - Time Available: ${timeAvailable}
+        - Budget: ${budget}
+        - Learning Goals: ${learningGoals.length > 0 ? learningGoals.join(', ') : 'Skill development'}
         
-        For each project idea, provide:
+        Please provide diverse project ideas that match the user's profile. For each project idea, provide:
         1. Project Title
         2. Brief Description (2-3 sentences)
         3. Difficulty Level (Beginner/Intermediate/Advanced)
@@ -678,7 +702,7 @@ const PersonalizedIdeaSelection = ({ userProfile, onIdeaSelect, onBackToDiscover
         **Technologies:** [tech stack]
         **You'll Learn:** [outcomes]
         
-        Make sure projects are realistic for the user's skill level and time constraints.`;
+        Make sure projects are realistic for the user's skill level and time constraints. Focus on projects that align with their interests and learning goals.`;
     };
     
     const parseMultipleIdeas = (generatedContent) => {
@@ -711,43 +735,97 @@ const PersonalizedIdeaSelection = ({ userProfile, onIdeaSelect, onBackToDiscover
         return line ? line.replace(`**${fieldName}**`, '').replace(fieldName, '').trim() : null;
     };
     
-    const generateFallbackIdeas = (profile) => {
-        const fallbackIdeas = [
-            {
-                id: 'fallback-1',
-                title: 'Personal Portfolio Website',
-                description: 'Create a responsive portfolio website to showcase your projects and skills.',
-                difficulty: 'Beginner',
-                time: '2-3 weeks',
-                technologies: 'HTML, CSS, JavaScript',
-                learning: 'Web development fundamentals, responsive design'
-            },
-            {
-                id: 'fallback-2',
-                title: 'Task Management App',
-                description: 'Build a full-stack application for managing daily tasks and productivity.',
-                difficulty: 'Intermediate',
-                time: '4-6 weeks',
-                technologies: 'React, Node.js, Database',
-                learning: 'Full-stack development, database design'
-            },
-            {
-                id: 'fallback-3',
-                title: 'Data Analysis Dashboard',
-                description: 'Create an interactive dashboard to visualize and analyze datasets.',
-                difficulty: 'Intermediate',
-                time: '3-4 weeks',
-                technologies: 'Python, Pandas, Visualization libraries',
-                learning: 'Data analysis, visualization, statistical insights'
-            }
-        ];
+    const generatePersonalizedFallbackIdeas = (profile) => {
+        console.log('Generating personalized fallback ideas for:', profile);
         
-        return fallbackIdeas.slice(0, Math.min(6, fallbackIdeas.length));
+        const fieldOfStudy = profile.fieldOfStudy || 'computer-science';
+        const skillLevel = profile.skillLevel || 'intermediate';
+        const interests = Array.isArray(profile.interests) ? profile.interests : [];
+        const timeAvailable = profile.resources?.timeAvailable || '1month';
+        
+        let fallbackIdeas = [];
+        
+        // Generate ideas based on field of study
+        if (fieldOfStudy === 'computer-science' || fieldOfStudy === 'web-development') {
+            fallbackIdeas.push({
+                id: 'cs-1',
+                title: 'Personal Portfolio Website',
+                description: `Create a responsive portfolio website to showcase your ${fieldOfStudy} projects and skills. Perfect for ${skillLevel} developers.`,
+                difficulty: skillLevel === 'beginner' ? 'Beginner' : 'Intermediate',
+                time: timeAvailable === '1-2weeks' ? '1-2 weeks' : '2-3 weeks',
+                technologies: 'HTML, CSS, JavaScript, React',
+                learning: 'Web development fundamentals, responsive design, modern frameworks'
+            });
+        }
+        
+        if (fieldOfStudy === 'data-science' || interests.includes('data-analysis')) {
+            fallbackIdeas.push({
+                id: 'ds-1',
+                title: 'Data Analysis Dashboard',
+                description: `Create an interactive dashboard to visualize and analyze datasets relevant to ${fieldOfStudy}. Tailored for ${skillLevel} level.`,
+                difficulty: skillLevel === 'beginner' ? 'Beginner' : 'Advanced',
+                time: timeAvailable === '1-2weeks' ? '2-3 weeks' : '3-4 weeks',
+                technologies: 'Python, Pandas, Plotly, Streamlit',
+                learning: 'Data analysis, visualization, statistical insights, dashboard creation'
+            });
+        }
+        
+        if (interests.includes('mobile-apps') || fieldOfStudy === 'mobile-development') {
+            fallbackIdeas.push({
+                id: 'mobile-1',
+                title: 'Mobile Task Manager',
+                description: `Build a cross-platform mobile app for task management. Designed for ${skillLevel} developers in ${fieldOfStudy}.`,
+                difficulty: skillLevel === 'beginner' ? 'Intermediate' : 'Advanced',
+                time: timeAvailable === 'semester' ? '6-8 weeks' : '4-6 weeks',
+                technologies: 'React Native, Firebase, Mobile UI/UX',
+                learning: 'Mobile development, cross-platform frameworks, backend integration'
+            });
+        }
+        
+        if (interests.includes('ai-projects') || fieldOfStudy === 'ai-ml') {
+            fallbackIdeas.push({
+                id: 'ai-1',
+                title: 'AI-Powered Chatbot',
+                description: `Develop an intelligent chatbot using machine learning. Perfect for ${skillLevel} students interested in AI.`,
+                difficulty: skillLevel === 'beginner' ? 'Intermediate' : 'Advanced',
+                time: timeAvailable === '1-2weeks' ? '3-4 weeks' : '4-6 weeks',
+                technologies: 'Python, TensorFlow, Natural Language Processing',
+                learning: 'Machine learning, NLP, AI model training, conversational AI'
+            });
+        }
+        
+        if (interests.includes('games') || interests.includes('web-apps')) {
+            fallbackIdeas.push({
+                id: 'game-1',
+                title: 'Interactive Web Game',
+                description: `Create an engaging web-based game with modern technologies. Suitable for ${skillLevel} developers.`,
+                difficulty: skillLevel === 'beginner' ? 'Beginner' : 'Intermediate',
+                time: timeAvailable === '1-2weeks' ? '2-3 weeks' : '3-4 weeks',
+                technologies: 'JavaScript, Canvas API, Game Physics',
+                learning: 'Game development, interactive programming, user engagement'
+            });
+        }
+        
+        // Add more generic ideas if we don't have enough
+        if (fallbackIdeas.length < 3) {
+            fallbackIdeas.push({
+                id: 'generic-1',
+                title: `${fieldOfStudy.charAt(0).toUpperCase() + fieldOfStudy.slice(1)} Project`,
+                description: `A comprehensive project tailored to your ${fieldOfStudy} background and ${skillLevel} skill level.`,
+                difficulty: skillLevel.charAt(0).toUpperCase() + skillLevel.slice(1),
+                time: timeAvailable === '1-2weeks' ? '2-3 weeks' : '4-6 weeks',
+                technologies: 'Modern tech stack relevant to your field',
+                learning: 'Advanced skills in your chosen field'
+            });
+        }
+        
+        return fallbackIdeas.slice(0, 6);
     };
     
     const handleIdeaSelect = (idea) => {
+        console.log('Idea selected:', idea);
         setSelectedIdea(idea);
-        // Generate full project documentation for selected idea
+        // Pass the selected idea and user profile to the parent component
         onIdeaSelect(idea, userProfile);
     };
     
