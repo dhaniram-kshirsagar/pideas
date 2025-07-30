@@ -962,7 +962,7 @@ const PersonalizedIdeaSelection = ({ userProfile, onIdeaSelect, onBackToDiscover
     );
 };
 
-// Discovery Result Component - Shows comprehensive project plan
+// Discovery Result Component - Shows comprehensive project plan using ProjectIdeaDisplay
 const DiscoveryResult = ({ idea, userProfile, onBackToSelection, onExitDiscovery, user }) => {
     if (!idea || !idea.comprehensivePlan) {
         return (
@@ -971,108 +971,63 @@ const DiscoveryResult = ({ idea, userProfile, onBackToSelection, onExitDiscovery
                     <h2 className="text-2xl font-bold text-white mb-4">No Project Plan Available</h2>
                     <button
                         onClick={onBackToSelection}
-                        className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors border border-gray-700/50"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                     >
-                        ← Back to Ideas
+                        Back to Ideas
                     </button>
                 </div>
             </div>
         );
     }
 
-    return (
-        <div className="min-h-screen bg-black">
-            {/* Header */}
-            <div className="bg-gray-900/80 border-b border-gray-800/60 p-6">
-                <div className="max-w-6xl mx-auto">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-2xl font-bold text-white mb-2">Your Comprehensive Project Plan</h1>
-                            <p className="text-gray-400">Generated from: {idea.title}</p>
-                        </div>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={onBackToSelection}
-                                className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors border border-gray-700/50"
-                            >
-                                ← Back to Ideas
-                            </button>
-                            <button
-                                onClick={onExitDiscovery}
-                                className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors border border-gray-600/50"
-                            >
-                                Exit Discovery
-                            </button>
-                        </div>
-                    </div>
+    // Custom header for discovery mode
+    const DiscoveryHeader = () => (
+        <div className="bg-gray-900/80 border-b border-gray-700/50 p-4">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-white">Your Comprehensive Project Plan</h1>
+                    <p className="text-gray-400 text-sm mt-1">
+                        Generated from: {idea.title}
+                    </p>
+                </div>
+                <div className="flex gap-3">
+                    <button
+                        onClick={onBackToSelection}
+                        className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors border border-gray-700/50"
+                    >
+                        ← Back to Ideas
+                    </button>
+                    <button
+                        onClick={onExitDiscovery}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                        Exit Discovery
+                    </button>
                 </div>
             </div>
+        </div>
+    );
 
-            {/* Content */}
-            <div className="max-w-6xl mx-auto p-6">
-                <div className="bg-gray-900/60 border border-gray-800/60 rounded-xl p-8">
-                    {/* Project Plan Content */}
-                    <div className="prose prose-invert max-w-none">
-                        <div 
-                            className="text-gray-300 leading-relaxed"
-                            dangerouslySetInnerHTML={{
-                                __html: idea.comprehensivePlan
-                                    .replace(/## /g, '<h2 class="text-2xl font-bold text-white mt-8 mb-4 border-b border-gray-700 pb-2">')
-                                    .replace(/### /g, '<h3 class="text-xl font-semibold text-gray-200 mt-6 mb-3">')
-                                    .replace(/\*\*([^*]+)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
-                                    .replace(/\n\n/g, '</p><p class="mb-4">')
-                                    .replace(/^(.)/g, '<p class="mb-4">$1')
-                                    .replace(/(.*)$/g, '$1</p>')
-                                    .replace(/\n- /g, '</p><ul class="list-disc list-inside mb-4 text-gray-300"><li>')
-                                    .replace(/\n\d+\. /g, '</p><ol class="list-decimal list-inside mb-4 text-gray-300"><li>')
-                                    .replace(/<li>([^<]+)/g, '<li class="mb-1">$1</li>')
-                                    .replace(/<\/li>\s*<li>/g, '</li><li class="mb-1">')
-                                    .replace(/<\/li>\s*<\/ul>/g, '</li></ul><p class="mb-4">')
-                                    .replace(/<\/li>\s*<\/ol>/g, '</li></ol><p class="mb-4">')
-                            }}
-                        />
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="mt-8 pt-6 border-t border-gray-700/50 flex gap-4 justify-center">
-                        <button
-                            onClick={() => {
-                                // Copy to clipboard
-                                navigator.clipboard.writeText(idea.comprehensivePlan);
-                                alert('Project plan copied to clipboard!');
-                            }}
-                            className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors border border-gray-700/50 flex items-center gap-2"
-                        >
-                            <span>📋</span>
-                            Copy Plan
-                        </button>
-                        <button
-                            onClick={() => {
-                                // Download as text file
-                                const blob = new Blob([idea.comprehensivePlan], { type: 'text/plain' });
-                                const url = URL.createObjectURL(blob);
-                                const a = document.createElement('a');
-                                a.href = url;
-                                a.download = `${idea.title.replace(/[^a-zA-Z0-9]/g, '_')}_project_plan.txt`;
-                                document.body.appendChild(a);
-                                a.click();
-                                document.body.removeChild(a);
-                                URL.revokeObjectURL(url);
-                            }}
-                            className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors border border-gray-700/50 flex items-center gap-2"
-                        >
-                            <span>💾</span>
-                            Download Plan
-                        </button>
-                        <button
-                            onClick={onBackToSelection}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
-                        >
-                            <span>🔄</span>
-                            Try Another Idea
-                        </button>
-                    </div>
-                </div>
+    return (
+        <div className="min-h-screen bg-black text-white relative overflow-hidden">
+            {/* Particle Background */}
+            <div className="absolute inset-0 z-0">
+                <div className="stars"></div>
+                <div className="twinkling"></div>
+            </div>
+            
+            {/* Custom Header for Discovery */}
+            <div className="relative z-10">
+                <DiscoveryHeader />
+            </div>
+            
+            {/* Use the same ProjectIdeaDisplay component as main app */}
+            <div className="relative z-10 h-[calc(100vh-80px)]">
+                <ProjectIdeaDisplay 
+                    idea={idea.comprehensivePlan} 
+                    onStartNew={onBackToSelection}
+                    user={user}
+                />
             </div>
         </div>
     );
