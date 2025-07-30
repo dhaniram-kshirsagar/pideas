@@ -208,7 +208,7 @@ async function ensureUserRole(userId: string, email: string): Promise<void> {
 /**
  * Get gamification questions for context gathering
  */
-export const getGameSteps = onCall({maxInstances: 5}, async (request: any) => {
+export const gameStepsGet = onCall({maxInstances: 5}, async (request: any) => {
   try {
     const { stepNumber } = request.data;
     
