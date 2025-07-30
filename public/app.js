@@ -1202,16 +1202,18 @@ const SidebarNavigation = ({ sections, selectedSection, onSectionSelect, isModif
                 <p className="text-xs text-gray-400">Select a section to view or modify</p>
             </div>
             
-            <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent flex-1 p-3 space-y-1">
+            {/* Fixed height container to show only 5-7 sections with scrolling */}
+            <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent p-3 space-y-1" style={{ maxHeight: '420px' }}>
                 {sections.map((section) => (
                     <button
                         key={section.id}
                         onClick={() => onSectionSelect(section.id)}
-                        className={`w-full text-left p-2 rounded-lg transition-all duration-200 ${
+                        className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${
                             selectedSection === section.id
                                 ? 'bg-gray-800/80 border border-gray-600/60 text-white'
                                 : 'bg-gray-900/60 border border-gray-800/40 text-gray-300 hover:bg-gray-800/80 hover:text-white'
                         }`}
+                        style={{ minHeight: '60px' }}
                     >
                         <div className="flex items-center gap-2">
                             <span className="text-base">{section.icon}</span>
@@ -1228,6 +1230,15 @@ const SidebarNavigation = ({ sections, selectedSection, onSectionSelect, isModif
                     </button>
                 ))}
             </div>
+            
+            {/* Show scroll indicator if there are more than 7 sections */}
+            {sections.length > 7 && (
+                <div className="p-2 border-t border-gray-700/50 text-center">
+                    <p className="text-xs text-gray-500">
+                        Scroll to see all {sections.length} sections
+                    </p>
+                </div>
+            )}
         </div>
     );
 };
