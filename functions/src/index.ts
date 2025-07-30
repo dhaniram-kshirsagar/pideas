@@ -95,6 +95,7 @@ interface IdeaGenerationRequest {
   prompt?: string;
   studentProfile?: StudentProfile;
   gameResponses?: any[];
+  discoveryMode?: boolean;
 }
 
 interface HistorySaveRequest {
@@ -206,6 +207,127 @@ async function ensureUserRole(userId: string, email: string): Promise<void> {
   }
 }
 
+// Helper function to create discovery mode prompt (multiple brief ideas)
+function createDiscoveryPrompt(inputQuery: string, profile: StudentProfile): string {
+  return `
+You are an expert educational project advisor. Generate exactly 6-8 diverse project ideas for students.
+
+Student Profile:
+- Field of Study: ${profile.stream || 'Engineering'}
+- Skill Level: ${profile.skillLevel || 'Intermediate'}
+- Interests: ${profile.interests?.join(', ') || 'General'}
+- Time Available: ${profile.projectDuration || '1-2 months'}
+- Preferred Technologies: ${profile.preferredTechnologies?.join(', ') || 'Flexible'}
+
+Request: ${inputQuery}
+
+Generate 6-8 BRIEF project ideas in this EXACT format:
+
+## Project Title 1
+**Description:** [2-3 sentence description]
+**Difficulty:** [Beginner/Intermediate/Advanced]
+**Time:** [X weeks]
+**Technologies:** [specific tech stack]
+**You'll Learn:** [key learning outcomes]
+
+## Project Title 2
+**Description:** [2-3 sentence description]
+**Difficulty:** [Beginner/Intermediate/Advanced]
+**Time:** [X weeks]
+**Technologies:** [specific tech stack]
+**You'll Learn:** [key learning outcomes]
+
+[Continue for 6-8 projects total]
+
+IMPORTANT:
+- Each project should be BRIEF (not comprehensive plans)
+- Focus on variety and different approaches
+- Match the student's ${profile.skillLevel || 'intermediate'} skill level
+- Align with interests: ${profile.interests?.join(', ') || 'general programming'}
+- Ensure projects can be completed in ${profile.projectDuration || '1-2 months'}
+- Use preferred technologies when possible: ${profile.preferredTechnologies?.join(', ') || 'flexible'}
+`;
+}
+
+// Helper function to create comprehensive mode prompt (single detailed plan)
+function createComprehensivePrompt(inputQuery: string, profile: StudentProfile): string {
+  return `
+You are an expert educational project advisor for ${profile.stream || 'engineering'} students.
+
+Student Context:
+- Academic Stream: ${profile.stream || 'Not specified'}
+- Year: ${profile.year || 'Not specified'}
+- Skill Level: ${profile.skillLevel || 'Intermediate'}
+- Interests: ${profile.interests?.join(', ') || 'General'}
+- Preferred Technologies: ${profile.preferredTechnologies?.join(', ') || 'Flexible'}
+- Team Size: ${profile.teamSize || 'Individual'}
+- Project Duration: ${profile.projectDuration || '1-2 months'}
+
+Project Query: ${inputQuery}
+
+Generate a comprehensive project idea that follows this EXACT structure:
+
+## PROJECT TITLE
+[Creative, specific title]
+
+## PROJECT OVERVIEW
+[2-3 sentence description of what the project does and its purpose]
+
+## LEARNING OBJECTIVES
+[3-4 specific learning goals the student will achieve]
+
+## TECHNICAL REQUIREMENTS
+### Technologies Needed:
+[List of specific technologies, frameworks, tools]
+
+### Skills Required:
+[List of technical and soft skills needed]
+
+### Difficulty Level:
+[Beginner/Intermediate/Advanced with brief justification]
+
+## PROJECT STRUCTURE
+### Phase 1: Planning & Setup (Week 1)
+[Specific tasks for initial phase]
+
+### Phase 2: Core Development (Weeks 2-X)
+[Main development tasks]
+
+### Phase 3: Testing & Refinement (Final Week)
+[Testing, debugging, documentation tasks]
+
+## KEY DELIVERABLES
+[List of specific outputs/artifacts the student will create]
+
+## IMPLEMENTATION GUIDE
+### Getting Started:
+[Step-by-step initial setup instructions]
+
+### Key Resources:
+[Specific tutorials, documentation, tools]
+
+### Common Challenges & Solutions:
+[Anticipated problems and how to solve them]
+
+## LEARNING OUTCOMES
+[What the student will know/be able to do after completion]
+
+## PROJECT VARIATIONS
+### Beginner Version:
+[Simplified version if needed]
+
+### Advanced Extensions:
+[Ways to expand the project for advanced students]
+
+Ensure the project is:
+1. Appropriate for ${profile.skillLevel || 'intermediate'} level
+2. Completable in ${profile.projectDuration || '1-2 months'}
+3. Suitable for ${profile.teamSize || 'individual work'}
+4. Uses technologies the student prefers: ${profile.preferredTechnologies?.join(', ') || 'flexible technologies'}
+5. Relevant to ${profile.stream || 'engineering'} curriculum
+`;
+}
+
 /**
  * Get gamification questions for context gathering
  */
@@ -290,7 +412,7 @@ export const gameStepsGet = onCall({maxInstances: 5}, async (request: any) => {
  */
 export const generateIdea = onCall({maxInstances: 5, timeoutSeconds: 300}, async (request: any) => {
   try {
-    const { query, prompt, studentProfile, gameResponses }: IdeaGenerationRequest = request.data;
+    const { query, prompt, studentProfile, gameResponses, discoveryMode }: IdeaGenerationRequest = request.data;
     
     // Accept either query or prompt parameter for compatibility
     const inputQuery = query || prompt;
@@ -299,7 +421,7 @@ export const generateIdea = onCall({maxInstances: 5, timeoutSeconds: 300}, async
       throw new Error("Invalid query/prompt parameter");
     }
     
-    logger.info("Received request with:", { query, prompt, hasStudentProfile: !!studentProfile });
+    logger.info("Received request with:", { query, prompt, hasStudentProfile: !!studentProfile, discoveryMode });
 
     // Validate student profile structure
     const profile: StudentProfile = studentProfile || {
@@ -312,84 +434,22 @@ export const generateIdea = onCall({maxInstances: 5, timeoutSeconds: 300}, async
       projectDuration: '1-2 months'
     };
 
-    logger.info("Generating comprehensive idea for:", { inputQuery, studentProfile: profile });
+    logger.info("Generating idea for:", { inputQuery, studentProfile: profile, discoveryMode });
 
-    // Build context-rich prompt
-    const contextPrompt = `
-You are an expert educational project advisor for ${profile.stream || 'engineering'} students.
-
-Student Context:
-- Academic Stream: ${profile.stream || 'Not specified'}
-- Year: ${profile.year || 'Not specified'}
-- Skill Level: ${profile.skillLevel || 'Intermediate'}
-- Interests: ${profile.interests?.join(', ') || 'General'}
-- Preferred Technologies: ${profile.preferredTechnologies?.join(', ') || 'Flexible'}
-- Team Size: ${profile.teamSize || 'Individual'}
-- Project Duration: ${profile.projectDuration || '1-2 months'}
-
-Project Query: ${inputQuery}
-
-Generate a comprehensive project idea that follows this EXACT structure:
-
-## PROJECT TITLE
-[Creative, specific title]
-
-## PROJECT OVERVIEW
-[2-3 sentence description of what the project does and its purpose]
-
-## LEARNING OBJECTIVES
-[3-4 specific learning goals the student will achieve]
-
-## TECHNICAL REQUIREMENTS
-### Technologies Needed:
-[List of specific technologies, frameworks, tools]
-
-### Skills Required:
-[List of technical and soft skills needed]
-
-### Difficulty Level:
-[Beginner/Intermediate/Advanced with brief justification]
-
-## PROJECT STRUCTURE
-### Phase 1: Planning & Setup (Week 1)
-[Specific tasks for initial phase]
-
-### Phase 2: Core Development (Weeks 2-X)
-[Main development tasks]
-
-### Phase 3: Testing & Refinement (Final Week)
-[Testing, debugging, documentation tasks]
-
-## KEY DELIVERABLES
-[List of specific outputs/artifacts the student will create]
-
-## IMPLEMENTATION GUIDE
-### Getting Started:
-[Step-by-step initial setup instructions]
-
-### Key Resources:
-[Specific tutorials, documentation, tools]
-
-### Common Challenges & Solutions:
-[Anticipated problems and how to solve them]
-
-## LEARNING OUTCOMES
-[What the student will know/be able to do after completion]
-
-## PROJECT VARIATIONS
-### Beginner Version:
-[Simplified version if needed]
-
-### Advanced Extensions:
-[Ways to expand the project for advanced students]
-
-Ensure the project is:
-1. Appropriate for ${profile.skillLevel || 'intermediate'} level
-2. Completable in ${profile.projectDuration || '1-2 months'}
-3. Suitable for ${profile.teamSize || 'individual work'}
-4. Uses technologies the student prefers: ${profile.preferredTechnologies?.join(', ') || 'flexible technologies'}
-5. Relevant to ${profile.stream || 'engineering'} curriculum
-`;
+    // Check if this is a discovery mode request (multiple brief ideas)
+    const isDiscoveryRequest = discoveryMode || inputQuery.includes('Generate 6-8') || inputQuery.includes('diverse project ideas');
+    
+    let contextPrompt: string;
+    
+    if (isDiscoveryRequest) {
+      // Discovery mode: Generate multiple brief project ideas
+      contextPrompt = createDiscoveryPrompt(inputQuery, profile);
+    } else {
+      // Regular mode: Generate one comprehensive project plan
+      contextPrompt = createComprehensivePrompt(inputQuery, profile);
+    }
+    
+    logger.info("Using prompt type:", isDiscoveryRequest ? 'Discovery (Multiple Ideas)' : 'Comprehensive (Single Plan)');
     
     // Using the gemini model with genkit
     const apiKey = process.env.GEMINI_API_KEY;
@@ -429,7 +489,8 @@ Ensure the project is:
           studentProfile: profile,
           query,
           gameResponses,
-          validated: ideaIsValid
+          validated: ideaIsValid,
+          promptType: isDiscoveryRequest ? 'discovery' : 'comprehensive'
         }
       };
     } catch (genkitError) {
