@@ -2101,6 +2101,7 @@ const App = () => {
         }
     }, []);
 
+    // All handler functions (no hooks) - must be before early returns
     const handleLogin = async () => {
         if (typeof firebase === 'undefined') {
             alert('Firebase not available. Please run from Firebase hosting.');
@@ -2132,43 +2133,6 @@ const App = () => {
             console.error('Logout error:', error);
         }
     };
-
-    if (isInitializing) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-900">
-                <div className="text-white">Loading...</div>
-            </div>
-        );
-    }
-
-    if (firebaseError) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-900">
-                <ParticleSystem />
-                <div className="content text-center z-10">
-                    <div className="particle-text">Pideas</div>
-                    <div className="mb-8">
-                        <h1 className="text-6xl md:text-8xl font-bold text-white mb-4 tracking-wider">
-                            Pideas
-                        </h1>
-                        <p className="text-gray-400 text-lg mb-4">
-                            Project Idea Generator
-                        </p>
-                        <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 max-w-md mx-auto">
-                            <p className="text-red-300 text-sm">
-                                {firebaseError}
-                            </p>
-                            <p className="text-gray-400 text-xs mt-2">
-                                For full functionality, please deploy to Firebase hosting.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-
     
     const handleDiscoveryPath = () => {
         setDiscoveryMode(true);
@@ -2271,6 +2235,42 @@ const App = () => {
         setUserProfile(null);
         setSelectedIdea(null);
     };
+
+    if (isInitializing) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-900">
+                <div className="text-white">Loading...</div>
+            </div>
+        );
+    }
+
+    if (firebaseError) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-900">
+                <ParticleSystem />
+                <div className="content text-center z-10">
+                    <div className="particle-text">Pideas</div>
+                    <div className="mb-8">
+                        <h1 className="text-6xl md:text-8xl font-bold text-white mb-4 tracking-wider">
+                            Pideas
+                        </h1>
+                        <p className="text-gray-400 text-lg mb-4">
+                            Project Idea Generator
+                        </p>
+                        <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 max-w-md mx-auto">
+                            <p className="text-red-300 text-sm">
+                                {firebaseError}
+                            </p>
+                            <p className="text-gray-400 text-xs mt-2">
+                                For full functionality, please deploy to Firebase hosting.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
 
     return (
         <div className="bg-gray-900 min-h-screen">
