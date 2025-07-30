@@ -91,9 +91,10 @@ function isValidProjectIdea(idea: any): idea is ProjectIdea {
 }
 
 interface IdeaGenerationRequest {
-  query: string;
-  studentProfile: StudentProfile;
-  gameResponses: any[];
+  query?: string;
+  prompt?: string;
+  studentProfile?: StudentProfile;
+  gameResponses?: any[];
 }
 
 interface HistorySaveRequest {
@@ -289,11 +290,16 @@ export const gameStepsGet = onCall({maxInstances: 5}, async (request: any) => {
  */
 export const generateIdea = onCall({maxInstances: 5, timeoutSeconds: 300}, async (request: any) => {
   try {
-    const { query, studentProfile, gameResponses }: IdeaGenerationRequest = request.data;
+    const { query, prompt, studentProfile, gameResponses }: IdeaGenerationRequest = request.data;
     
-    if (!query || typeof query !== "string") {
-      throw new Error("Invalid query parameter");
+    // Accept either query or prompt parameter for compatibility
+    const inputQuery = query || prompt;
+    
+    if (!inputQuery || typeof inputQuery !== "string") {
+      throw new Error("Invalid query/prompt parameter");
     }
+    
+    logger.info("Received request with:", { query, prompt, hasStudentProfile: !!studentProfile });
 
     // Validate student profile structure
     const profile: StudentProfile = studentProfile || {
@@ -306,7 +312,7 @@ export const generateIdea = onCall({maxInstances: 5, timeoutSeconds: 300}, async
       projectDuration: '1-2 months'
     };
 
-    logger.info("Generating comprehensive idea for:", { query, studentProfile: profile });
+    logger.info("Generating comprehensive idea for:", { inputQuery, studentProfile: profile });
 
     // Build context-rich prompt
     const contextPrompt = `
@@ -321,7 +327,7 @@ Student Context:
 - Team Size: ${profile.teamSize || 'Individual'}
 - Project Duration: ${profile.projectDuration || '1-2 months'}
 
-Project Query: ${query}
+Project Query: ${inputQuery}
 
 Generate a comprehensive project idea that follows this EXACT structure:
 

@@ -625,13 +625,13 @@ const PersonalizedIdeaSelection = ({ userProfile, onIdeaSelect, onBackToDiscover
         generatePersonalizedIdeas();
     }, []);
     
-    const generatePersonalizedIdeas = async () => {
+    const generatePersonalizedIdeas = async (regenerate = false) => {
         setIsGenerating(true);
-        console.log('Generating personalized ideas for profile:', userProfile);
+        console.log('Generating personalized ideas for profile:', userProfile, 'regenerate:', regenerate);
         
         try {
             // Create a detailed prompt based on user profile
-            const prompt = createPersonalizedPrompt(userProfile);
+            const prompt = createPersonalizedPrompt(userProfile, regenerate);
             console.log('Generated prompt:', prompt);
             
             // Use existing idea generation system
@@ -651,7 +651,7 @@ const PersonalizedIdeaSelection = ({ userProfile, onIdeaSelect, onBackToDiscover
                     setIdeas(parsedIdeas);
                 } else {
                     console.warn('No ideas parsed from generated content, using fallback');
-                    setIdeas(generateFallbackIdeas(userProfile));
+                    setIdeas(generatePersonalizedFallbackIdeas(userProfile, regenerate));
                 }
             } else {
                 console.error('Firebase function returned error:', result.data?.error);
@@ -661,13 +661,13 @@ const PersonalizedIdeaSelection = ({ userProfile, onIdeaSelect, onBackToDiscover
             console.error('Error generating personalized ideas:', error);
             console.log('Using fallback ideas for profile:', userProfile);
             // Generate personalized fallback ideas based on user profile
-            setIdeas(generatePersonalizedFallbackIdeas(userProfile));
+            setIdeas(generatePersonalizedFallbackIdeas(userProfile, regenerate));
         } finally {
             setIsGenerating(false);
         }
     };
     
-    const createPersonalizedPrompt = (profile) => {
+    const createPersonalizedPrompt = (profile, regenerate = false) => {
         // Ensure we have valid profile data
         const fieldOfStudy = profile.fieldOfStudy || 'Computer Science';
         const skillLevel = profile.skillLevel || 'intermediate';
@@ -676,7 +676,31 @@ const PersonalizedIdeaSelection = ({ userProfile, onIdeaSelect, onBackToDiscover
         const budget = profile.resources?.budget || 'free';
         const learningGoals = Array.isArray(profile.learningGoals) ? profile.learningGoals : [];
         
-        return `Generate 6-8 diverse project ideas for a ${skillLevel} level student in ${fieldOfStudy}. 
+        // Add variety for regeneration
+        const varietyPrompts = [
+            'Generate 6-8 diverse and creative project ideas',
+            'Create 6-8 innovative project concepts',
+            'Develop 6-8 unique project suggestions',
+            'Design 6-8 engaging project proposals'
+        ];
+        
+        const focusAreas = [
+            'cutting-edge technologies',
+            'practical real-world applications',
+            'innovative solutions to common problems',
+            'emerging trends and technologies',
+            'interdisciplinary approaches'
+        ];
+        
+        const basePrompt = regenerate ? 
+            varietyPrompts[Math.floor(Math.random() * varietyPrompts.length)] :
+            'Generate 6-8 diverse project ideas';
+            
+        const focusArea = regenerate ?
+            focusAreas[Math.floor(Math.random() * focusAreas.length)] :
+            'practical applications';
+        
+        return `${basePrompt} for a ${skillLevel} level student in ${fieldOfStudy}, focusing on ${focusArea}. 
         
         User Profile:
         - Field of Study: ${fieldOfStudy}
@@ -686,7 +710,7 @@ const PersonalizedIdeaSelection = ({ userProfile, onIdeaSelect, onBackToDiscover
         - Budget: ${budget}
         - Learning Goals: ${learningGoals.length > 0 ? learningGoals.join(', ') : 'Skill development'}
         
-        Please provide diverse project ideas that match the user's profile. For each project idea, provide:
+        ${regenerate ? 'Please provide DIFFERENT and MORE CREATIVE project ideas than typical suggestions. Think outside the box while' : 'Please provide diverse project ideas that'} match the user's profile. For each project idea, provide:
         1. Project Title
         2. Brief Description (2-3 sentences)
         3. Difficulty Level (Beginner/Intermediate/Advanced)
@@ -702,7 +726,7 @@ const PersonalizedIdeaSelection = ({ userProfile, onIdeaSelect, onBackToDiscover
         **Technologies:** [tech stack]
         **You'll Learn:** [outcomes]
         
-        Make sure projects are realistic for the user's skill level and time constraints. Focus on projects that align with their interests and learning goals.`;
+        Make sure projects are realistic for the user's skill level and time constraints. Focus on projects that align with their interests and learning goals.${regenerate ? ' Avoid common or typical project suggestions - be creative and innovative!' : ''}`;
     };
     
     const parseMultipleIdeas = (generatedContent) => {
@@ -735,8 +759,8 @@ const PersonalizedIdeaSelection = ({ userProfile, onIdeaSelect, onBackToDiscover
         return line ? line.replace(`**${fieldName}**`, '').replace(fieldName, '').trim() : null;
     };
     
-    const generatePersonalizedFallbackIdeas = (profile) => {
-        console.log('Generating personalized fallback ideas for:', profile);
+    const generatePersonalizedFallbackIdeas = (profile, regenerate = false) => {
+        console.log('Generating personalized fallback ideas for:', profile, 'regenerate:', regenerate);
         
         const fieldOfStudy = profile.fieldOfStudy || 'computer-science';
         const skillLevel = profile.skillLevel || 'intermediate';
@@ -921,11 +945,12 @@ const PersonalizedIdeaSelection = ({ userProfile, onIdeaSelect, onBackToDiscover
                 
                 <div className="text-center mt-8">
                     <button
-                        onClick={generatePersonalizedIdeas}
-                        className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors border border-gray-700/50 flex items-center gap-2 mx-auto"
+                        onClick={() => generatePersonalizedIdeas(true)}
+                        disabled={isGenerating}
+                        className="bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium transition-colors border border-gray-700/50 flex items-center gap-2 mx-auto"
                     >
-                        <span>🔄</span>
-                        Generate More Ideas
+                        <span>{isGenerating ? '⏳' : '🔄'}</span>
+                        {isGenerating ? 'Generating...' : 'Generate More Ideas'}
                     </button>
                 </div>
             </div>
