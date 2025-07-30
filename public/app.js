@@ -224,6 +224,8 @@ const DiscoveryOnboarding = ({ onComplete, user }) => {
     });
     const [progress, setProgress] = useState(0);
     const [badges, setBadges] = useState([]);
+    const [isTransitioning, setIsTransitioning] = useState(false);
+    const [stepKey, setStepKey] = useState(0); // Force re-render of DiscoveryStep
     
     const discoverySteps = [
         {
@@ -316,6 +318,16 @@ const DiscoveryOnboarding = ({ onComplete, user }) => {
     ];
     
     const handleStepComplete = (stepData) => {
+        console.log('handleStepComplete called with:', stepData, 'currentStep:', currentStep);
+        
+        // Prevent multiple rapid calls
+        if (isTransitioning) {
+            console.log('Already transitioning, ignoring duplicate call');
+            return;
+        }
+        
+        setIsTransitioning(true);
+        
         const newProfile = { ...userProfile };
         const step = discoverySteps[currentStep];
         
@@ -344,18 +356,24 @@ const DiscoveryOnboarding = ({ onComplete, user }) => {
         console.log('Step completed:', currentStep, 'Moving to next step');
         
         if (currentStep < discoverySteps.length - 1) {
-            // Ensure we wait long enough after the encouragement message before moving to the next step
-            // This should match the timeout in DiscoveryStep (1200ms)
+            // Move to next step after a short delay
             setTimeout(() => {
-                console.log('Setting current step to:', currentStep + 1);
-                setCurrentStep(currentStep + 1);
-            }, 1600);
+                console.log('Advancing from step', currentStep, 'to step', currentStep + 1);
+                setCurrentStep(prev => {
+                    const nextStep = prev + 1;
+                    console.log('State update: currentStep changed from', prev, 'to', nextStep);
+                    return nextStep;
+                });
+                setStepKey(prev => prev + 1); // Force re-render of DiscoveryStep
+                setIsTransitioning(false);
+            }, 1500);
         } else {
             // Complete the discovery process
             setTimeout(() => {
                 console.log('Discovery completed, calling onComplete');
                 onComplete(newProfile);
-            }, 1000);
+                setIsTransitioning(false);
+            }, 1500);
         }
     };
     
@@ -395,10 +413,12 @@ const DiscoveryOnboarding = ({ onComplete, user }) => {
             {/* Main Content */}
             <div className="flex-1 flex items-center justify-center p-4">
                 <DiscoveryStep 
+                    key={`step-${currentStep}-${stepKey}`} // Force re-render when step changes
                     step={discoverySteps[currentStep]}
                     onComplete={handleStepComplete}
                     stepNumber={currentStep + 1}
                     totalSteps={discoverySteps.length}
+                    isTransitioning={isTransitioning}
                 />
             </div>
         </div>
@@ -406,17 +426,37 @@ const DiscoveryOnboarding = ({ onComplete, user }) => {
 };
 
 // Individual Discovery Step Component
-const DiscoveryStep = ({ step, onComplete, stepNumber, totalSteps }) => {
+const DiscoveryStep = ({ step, onComplete, stepNumber, totalSteps, isTransitioning }) => {
     const [selectedValue, setSelectedValue] = useState('');
     const [selectedValues, setSelectedValues] = useState([]);
     const [formData, setFormData] = useState({});
     const [showEncouragement, setShowEncouragement] = useState(false);
+    const [hasCompleted, setHasCompleted] = useState(false);
+    
+    // Reset state when step changes
+    useEffect(() => {
+        setSelectedValue('');
+        setSelectedValues([]);
+        setFormData({});
+        setShowEncouragement(false);
+        setHasCompleted(false);
+        console.log('DiscoveryStep mounted/updated for step:', stepNumber, 'step data:', step);
+    }, [step.id, stepNumber]);
     
     const handleSingleChoice = (value) => {
+        if (hasCompleted || isTransitioning) {
+            console.log('Choice already made or transitioning, ignoring click');
+            return;
+        }
+        
+        console.log('Single choice selected:', value);
         setSelectedValue(value);
         setShowEncouragement(true);
-        // Show encouragement message for a reasonable duration
+        setHasCompleted(true);
+        
+        // Show encouragement message then complete
         setTimeout(() => {
+            console.log('Completing step with value:', value);
             onComplete({ value });
         }, 1200);
     };
@@ -429,20 +469,36 @@ const DiscoveryStep = ({ step, onComplete, stepNumber, totalSteps }) => {
     };
     
     const handleMultiChoiceSubmit = () => {
+        if (hasCompleted || isTransitioning) {
+            console.log('Already completed or transitioning, ignoring submit');
+            return;
+        }
+        
         if (selectedValues.length > 0) {
+            console.log('Multi choice submitted:', selectedValues);
             setShowEncouragement(true);
-            // Show encouragement message for a reasonable duration
+            setHasCompleted(true);
+            
             setTimeout(() => {
+                console.log('Completing step with values:', selectedValues);
                 onComplete({ values: selectedValues });
             }, 1200);
         }
     };
     
     const handleFormSubmit = () => {
+        if (hasCompleted || isTransitioning) {
+            console.log('Already completed or transitioning, ignoring form submit');
+            return;
+        }
+        
         if (Object.keys(formData).length === step.fields.length) {
+            console.log('Form submitted:', formData);
             setShowEncouragement(true);
-            // Show encouragement message for a reasonable duration
+            setHasCompleted(true);
+            
             setTimeout(() => {
+                console.log('Completing step with form data:', formData);
                 onComplete(formData);
             }, 1200);
         }
