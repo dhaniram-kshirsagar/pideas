@@ -2069,6 +2069,12 @@ const App = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isInitializing, setIsInitializing] = useState(true);
     const [firebaseError, setFirebaseError] = useState(null);
+    
+    // Discovery path states
+    const [discoveryMode, setDiscoveryMode] = useState(false);
+    const [discoveryStep, setDiscoveryStep] = useState('onboarding'); // 'onboarding', 'selection', 'generating'
+    const [userProfile, setUserProfile] = useState(null);
+    const [selectedIdea, setSelectedIdea] = useState(null);
 
     useEffect(() => {
         // Check if Firebase is available
@@ -2162,11 +2168,7 @@ const App = () => {
         );
     }
 
-    // Discovery path states
-    const [discoveryMode, setDiscoveryMode] = useState(false);
-    const [discoveryStep, setDiscoveryStep] = useState('onboarding'); // 'onboarding', 'selection', 'generating'
-    const [userProfile, setUserProfile] = useState(null);
-    const [selectedIdea, setSelectedIdea] = useState(null);
+
     
     const handleDiscoveryPath = () => {
         setDiscoveryMode(true);
