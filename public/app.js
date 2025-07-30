@@ -638,7 +638,11 @@ const PersonalizedIdeaSelection = ({ userProfile, onIdeaSelect, onBackToDiscover
             const generateIdea = firebase.functions().httpsCallable('generateIdea');
             console.log('Calling Firebase function generateIdea...');
             
-            const result = await generateIdea({ prompt });
+            // Pass discoveryMode flag to ensure backend uses discovery prompt
+            const result = await generateIdea({ 
+                prompt, 
+                discoveryMode: true 
+            });
             console.log('Firebase function result:', result);
             
             if (result.data && result.data.success) {
