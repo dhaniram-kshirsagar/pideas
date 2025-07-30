@@ -117,29 +117,661 @@ const ParticleSystem = () => {
     return <canvas ref={canvasRef} id="particles-canvas" />;
 };
 
-// Login Screen Component
-const LoginScreen = ({ onLogin, isLoading }) => {
+// Dual-Path Login Screen Component
+const LoginScreen = ({ onLogin, onDiscoveryPath, isLoading }) => {
     return (
         <div className="min-h-screen flex flex-col relative bg-black">
             {/* Logo positioned in upper portion */}
-            <div className="flex-1 flex items-center justify-center">
+            <div className="flex-1 flex items-center justify-center mb-8">
                 <InteractiveLogo />
             </div>
-            {/* Login button positioned in lower portion */}
-            <div className="content text-center z-10 pb-20">
-                <button
-                    onClick={onLogin}
-                    disabled={isLoading}
-                    className="bg-white text-gray-800 px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors duration-200 flex items-center gap-3 mx-auto disabled:opacity-50"
-                >
-                    <svg className="w-5 h-5" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                    {isLoading ? 'Signing in...' : 'Login with Google'}
-                </button>
+            
+            {/* Dual Login Cards */}
+            <div className="content z-10 pb-20 px-4">
+                <div className="max-w-4xl mx-auto">
+                    <h2 className="text-2xl font-bold text-white text-center mb-8">
+                        Choose Your Path to Project Success
+                    </h2>
+                    
+                    <div className="grid md:grid-cols-2 gap-6">
+                        {/* Existing Users Card */}
+                        <div className="bg-gray-900/80 border border-gray-700/50 rounded-xl p-6 hover:border-gray-600/70 transition-all duration-300 hover:bg-gray-900/90">
+                            <div className="text-center">
+                                <div className="w-16 h-16 bg-gray-800/60 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <span className="text-2xl">🚀</span>
+                                </div>
+                                <h3 className="text-xl font-semibold text-white mb-3">
+                                    I Know What I Want
+                                </h3>
+                                <p className="text-gray-300 text-sm mb-6 leading-relaxed">
+                                    Perfect for students who already have project ideas or know their field of interest. 
+                                    Jump straight into generating detailed project plans.
+                                </p>
+                                <button
+                                    onClick={onLogin}
+                                    disabled={isLoading}
+                                    className="w-full bg-white text-gray-800 px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center gap-3 disabled:opacity-50"
+                                >
+                                    <svg className="w-5 h-5" viewBox="0 0 24 24">
+                                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                    </svg>
+                                    {isLoading ? 'Signing in...' : 'Quick Start'}
+                                </button>
+                            </div>
+                        </div>
+                        
+                        {/* Discovery Path Card */}
+                        <div className="bg-gray-900/80 border border-gray-700/50 rounded-xl p-6 hover:border-gray-600/70 transition-all duration-300 hover:bg-gray-900/90">
+                            <div className="text-center">
+                                <div className="w-16 h-16 bg-gray-800/60 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <span className="text-2xl">🎯</span>
+                                </div>
+                                <h3 className="text-xl font-semibold text-white mb-3">
+                                    Help Me Discover
+                                </h3>
+                                <p className="text-gray-300 text-sm mb-6 leading-relaxed">
+                                    Not sure what to build? Take our interactive quiz to discover personalized 
+                                    project ideas based on your skills, interests, and goals.
+                                </p>
+                                <button
+                                    onClick={onDiscoveryPath}
+                                    disabled={isLoading}
+                                    className="w-full bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-3 border border-gray-700/50 disabled:opacity-50"
+                                >
+                                    <span className="text-lg">✨</span>
+                                    Start Discovery
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p className="text-center text-gray-400 text-sm mt-6">
+                        Both paths lead to the same powerful project generation system
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Discovery Path Components
+
+// Gamified Discovery Onboarding Component
+const DiscoveryOnboarding = ({ onComplete, user }) => {
+    const [currentStep, setCurrentStep] = useState(0);
+    const [userProfile, setUserProfile] = useState({
+        fieldOfStudy: '',
+        skillLevel: '',
+        interests: [],
+        resources: {
+            timeAvailable: '',
+            budget: '',
+            tools: []
+        },
+        learningGoals: []
+    });
+    const [progress, setProgress] = useState(0);
+    const [badges, setBadges] = useState([]);
+    
+    const discoverySteps = [
+        {
+            id: 'field',
+            title: '🎓 What\'s Your Academic Focus?',
+            subtitle: 'Tell us about your field of study',
+            type: 'single-choice',
+            options: [
+                { value: 'computer-science', label: 'Computer Science', icon: '💻' },
+                { value: 'engineering', label: 'Engineering', icon: '⚙️' },
+                { value: 'data-science', label: 'Data Science', icon: '📊' },
+                { value: 'web-development', label: 'Web Development', icon: '🌐' },
+                { value: 'mobile-development', label: 'Mobile Development', icon: '📱' },
+                { value: 'ai-ml', label: 'AI/Machine Learning', icon: '🤖' },
+                { value: 'cybersecurity', label: 'Cybersecurity', icon: '🔒' },
+                { value: 'other', label: 'Other/Interdisciplinary', icon: '🎯' }
+            ]
+        },
+        {
+            id: 'skill',
+            title: '⭐ What\'s Your Skill Level?',
+            subtitle: 'Be honest - this helps us match you perfectly!',
+            type: 'single-choice',
+            options: [
+                { value: 'beginner', label: 'Beginner', description: 'Just starting out, eager to learn', icon: '🌱' },
+                { value: 'intermediate', label: 'Intermediate', description: 'Some experience, ready for challenges', icon: '🚀' },
+                { value: 'advanced', label: 'Advanced', description: 'Experienced, looking for complex projects', icon: '⚡' }
+            ]
+        },
+        {
+            id: 'interests',
+            title: '❤️ What Excites You Most?',
+            subtitle: 'Select all that spark your curiosity (multiple choices)',
+            type: 'multi-choice',
+            options: [
+                { value: 'web-apps', label: 'Web Applications', icon: '🌐' },
+                { value: 'mobile-apps', label: 'Mobile Apps', icon: '📱' },
+                { value: 'games', label: 'Game Development', icon: '🎮' },
+                { value: 'ai-projects', label: 'AI/ML Projects', icon: '🤖' },
+                { value: 'data-analysis', label: 'Data Analysis', icon: '📈' },
+                { value: 'iot', label: 'IoT & Hardware', icon: '🔧' },
+                { value: 'blockchain', label: 'Blockchain', icon: '⛓️' },
+                { value: 'automation', label: 'Automation Tools', icon: '🤖' }
+            ]
+        },
+        {
+            id: 'resources',
+            title: '⏰ What Resources Do You Have?',
+            subtitle: 'Help us suggest realistic projects for you',
+            type: 'resource-form',
+            fields: [
+                {
+                    name: 'timeAvailable',
+                    label: 'Time Available',
+                    type: 'select',
+                    options: [
+                        { value: '1-2weeks', label: '1-2 weeks' },
+                        { value: '1month', label: '1 month' },
+                        { value: '2-3months', label: '2-3 months' },
+                        { value: 'semester', label: 'Full semester' }
+                    ]
+                },
+                {
+                    name: 'budget',
+                    label: 'Budget Range',
+                    type: 'select',
+                    options: [
+                        { value: 'free', label: 'Free resources only' },
+                        { value: 'minimal', label: 'Under $50' },
+                        { value: 'moderate', label: '$50-200' },
+                        { value: 'flexible', label: 'Flexible budget' }
+                    ]
+                }
+            ]
+        },
+        {
+            id: 'goals',
+            title: '🎯 What Do You Want to Achieve?',
+            subtitle: 'Select your learning objectives (multiple choices)',
+            type: 'multi-choice',
+            options: [
+                { value: 'portfolio', label: 'Build Portfolio', icon: '💼' },
+                { value: 'learn-tech', label: 'Learn New Technology', icon: '📚' },
+                { value: 'solve-problem', label: 'Solve Real Problems', icon: '🔧' },
+                { value: 'job-ready', label: 'Become Job-Ready', icon: '💼' },
+                { value: 'startup-idea', label: 'Explore Startup Ideas', icon: '🚀' },
+                { value: 'academic-project', label: 'Complete Academic Project', icon: '🎓' }
+            ]
+        }
+    ];
+    
+    const handleStepComplete = (stepData) => {
+        const newProfile = { ...userProfile };
+        const step = discoverySteps[currentStep];
+        
+        if (step.type === 'single-choice') {
+            newProfile[step.id === 'field' ? 'fieldOfStudy' : 'skillLevel'] = stepData.value;
+        } else if (step.type === 'multi-choice') {
+            newProfile[step.id === 'interests' ? 'interests' : 'learningGoals'] = stepData.values;
+        } else if (step.type === 'resource-form') {
+            newProfile.resources = { ...newProfile.resources, ...stepData };
+        }
+        
+        setUserProfile(newProfile);
+        
+        // Award badges
+        const newBadges = [...badges];
+        if (currentStep === 0) newBadges.push('🎓 Academic Explorer');
+        if (currentStep === 1) newBadges.push('⭐ Self-Aware Learner');
+        if (currentStep === 2) newBadges.push('❤️ Passion Finder');
+        if (currentStep === 3) newBadges.push('⏰ Resource Planner');
+        if (currentStep === 4) newBadges.push('🎯 Goal Setter');
+        setBadges(newBadges);
+        
+        const newProgress = ((currentStep + 1) / discoverySteps.length) * 100;
+        setProgress(newProgress);
+        
+        if (currentStep < discoverySteps.length - 1) {
+            setTimeout(() => setCurrentStep(currentStep + 1), 500);
+        } else {
+            // Complete the discovery process
+            setTimeout(() => onComplete(newProfile), 1000);
+        }
+    };
+    
+    return (
+        <div className="min-h-screen bg-black flex flex-col">
+            {/* Progress Header */}
+            <div className="bg-gray-900/80 border-b border-gray-800/60 p-4">
+                <div className="max-w-4xl mx-auto">
+                    <div className="flex items-center justify-between mb-4">
+                        <h1 className="text-xl font-semibold text-white">Project Discovery Journey</h1>
+                        <div className="text-sm text-gray-400">
+                            Step {currentStep + 1} of {discoverySteps.length}
+                        </div>
+                    </div>
+                    
+                    {/* Progress Bar */}
+                    <div className="w-full bg-gray-800 rounded-full h-2">
+                        <div 
+                            className="bg-gray-600 h-2 rounded-full transition-all duration-500 ease-out"
+                            style={{ width: `${progress}%` }}
+                        ></div>
+                    </div>
+                    
+                    {/* Badges */}
+                    {badges.length > 0 && (
+                        <div className="flex gap-2 mt-3">
+                            {badges.map((badge, index) => (
+                                <span key={index} className="text-xs bg-gray-800/60 text-gray-300 px-2 py-1 rounded-full">
+                                    {badge}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+            
+            {/* Main Content */}
+            <div className="flex-1 flex items-center justify-center p-4">
+                <DiscoveryStep 
+                    step={discoverySteps[currentStep]}
+                    onComplete={handleStepComplete}
+                    stepNumber={currentStep + 1}
+                    totalSteps={discoverySteps.length}
+                />
+            </div>
+        </div>
+    );
+};
+
+// Individual Discovery Step Component
+const DiscoveryStep = ({ step, onComplete, stepNumber, totalSteps }) => {
+    const [selectedValue, setSelectedValue] = useState('');
+    const [selectedValues, setSelectedValues] = useState([]);
+    const [formData, setFormData] = useState({});
+    const [showEncouragement, setShowEncouragement] = useState(false);
+    
+    const handleSingleChoice = (value) => {
+        setSelectedValue(value);
+        setShowEncouragement(true);
+        setTimeout(() => {
+            onComplete({ value });
+        }, 1000);
+    };
+    
+    const handleMultiChoice = (value) => {
+        const newValues = selectedValues.includes(value)
+            ? selectedValues.filter(v => v !== value)
+            : [...selectedValues, value];
+        setSelectedValues(newValues);
+    };
+    
+    const handleMultiChoiceSubmit = () => {
+        if (selectedValues.length > 0) {
+            setShowEncouragement(true);
+            setTimeout(() => {
+                onComplete({ values: selectedValues });
+            }, 1000);
+        }
+    };
+    
+    const handleFormSubmit = () => {
+        if (Object.keys(formData).length === step.fields.length) {
+            setShowEncouragement(true);
+            setTimeout(() => {
+                onComplete(formData);
+            }, 1000);
+        }
+    };
+    
+    const encouragementMessages = [
+        "Great choice! 🌟",
+        "Excellent! 🎉",
+        "Perfect! ✨",
+        "Awesome! 🚀",
+        "Fantastic! 💫"
+    ];
+    
+    return (
+        <div className="max-w-2xl mx-auto text-center">
+            {showEncouragement ? (
+                <div className="animate-pulse">
+                    <div className="text-4xl mb-4">🎉</div>
+                    <h2 className="text-2xl font-bold text-white mb-2">
+                        {encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)]}
+                    </h2>
+                    <p className="text-gray-400">Moving to next step...</p>
+                </div>
+            ) : (
+                <>
+                    <h2 className="text-3xl font-bold text-white mb-4">{step.title}</h2>
+                    <p className="text-gray-300 mb-8 text-lg">{step.subtitle}</p>
+                    
+                    {step.type === 'single-choice' && (
+                        <div className="grid gap-4 max-w-lg mx-auto">
+                            {step.options.map((option) => (
+                                <button
+                                    key={option.value}
+                                    onClick={() => handleSingleChoice(option.value)}
+                                    className="bg-gray-900/60 border border-gray-800/60 rounded-lg p-4 hover:bg-gray-800/80 hover:border-gray-700/80 transition-all duration-200 text-left"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-2xl">{option.icon}</span>
+                                        <div>
+                                            <div className="text-white font-medium">{option.label}</div>
+                                            {option.description && (
+                                                <div className="text-gray-400 text-sm">{option.description}</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                    
+                    {step.type === 'multi-choice' && (
+                        <>
+                            <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto mb-6">
+                                {step.options.map((option) => (
+                                    <button
+                                        key={option.value}
+                                        onClick={() => handleMultiChoice(option.value)}
+                                        className={`bg-gray-900/60 border rounded-lg p-4 hover:bg-gray-800/80 transition-all duration-200 ${
+                                            selectedValues.includes(option.value)
+                                                ? 'border-gray-600/80 bg-gray-800/80'
+                                                : 'border-gray-800/60'
+                                        }`}
+                                    >
+                                        <div className="text-center">
+                                            <span className="text-2xl block mb-2">{option.icon}</span>
+                                            <div className="text-white font-medium text-sm">{option.label}</div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                            <button
+                                onClick={handleMultiChoiceSubmit}
+                                disabled={selectedValues.length === 0}
+                                className="bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors border border-gray-700/50"
+                            >
+                                Continue ({selectedValues.length} selected)
+                            </button>
+                        </>
+                    )}
+                    
+                    {step.type === 'resource-form' && (
+                        <>
+                            <div className="space-y-6 max-w-md mx-auto mb-6">
+                                {step.fields.map((field) => (
+                                    <div key={field.name} className="text-left">
+                                        <label className="block text-white font-medium mb-2">{field.label}</label>
+                                        <select
+                                            value={formData[field.name] || ''}
+                                            onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
+                                            className="w-full bg-gray-900/70 border border-gray-800/60 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-gray-600/70 focus:border-gray-600/70"
+                                        >
+                                            <option value="">Select {field.label.toLowerCase()}...</option>
+                                            {field.options.map((option) => (
+                                                <option key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                ))}
+                            </div>
+                            <button
+                                onClick={handleFormSubmit}
+                                disabled={Object.keys(formData).length !== step.fields.length}
+                                className="bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors border border-gray-700/50"
+                            >
+                                Continue
+                            </button>
+                        </>
+                    )}
+                </>
+            )}
+        </div>
+    );
+};
+
+// Personalized Idea Selection Component
+const PersonalizedIdeaSelection = ({ userProfile, onIdeaSelect, onBackToDiscovery, user }) => {
+    const [ideas, setIdeas] = useState([]);
+    const [isGenerating, setIsGenerating] = useState(true);
+    const [selectedIdea, setSelectedIdea] = useState(null);
+    
+    useEffect(() => {
+        generatePersonalizedIdeas();
+    }, []);
+    
+    const generatePersonalizedIdeas = async () => {
+        setIsGenerating(true);
+        try {
+            // Create a detailed prompt based on user profile
+            const prompt = createPersonalizedPrompt(userProfile);
+            
+            // Use existing idea generation system
+            const generateIdea = firebase.functions().httpsCallable('generateIdea');
+            const result = await generateIdea({ prompt });
+            
+            if (result.data.success) {
+                // Parse the generated content into multiple ideas
+                const parsedIdeas = parseMultipleIdeas(result.data.idea);
+                setIdeas(parsedIdeas);
+            } else {
+                throw new Error(result.data.error || 'Failed to generate ideas');
+            }
+        } catch (error) {
+            console.error('Error generating personalized ideas:', error);
+            // Fallback to sample ideas
+            setIdeas(generateFallbackIdeas(userProfile));
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+    
+    const createPersonalizedPrompt = (profile) => {
+        return `Generate 6-8 diverse project ideas for a ${profile.skillLevel} level student in ${profile.fieldOfStudy}. 
+        
+        User Profile:
+        - Field: ${profile.fieldOfStudy}
+        - Skill Level: ${profile.skillLevel}
+        - Interests: ${profile.interests.join(', ')}
+        - Time Available: ${profile.resources.timeAvailable}
+        - Budget: ${profile.resources.budget}
+        - Learning Goals: ${profile.learningGoals.join(', ')}
+        
+        For each project idea, provide:
+        1. Project Title
+        2. Brief Description (2-3 sentences)
+        3. Difficulty Level (Beginner/Intermediate/Advanced)
+        4. Estimated Time (in weeks)
+        5. Key Technologies/Skills Required
+        6. Learning Outcomes
+        
+        Format each idea as:
+        ## Project Title
+        **Description:** [description]
+        **Difficulty:** [level]
+        **Time:** [duration]
+        **Technologies:** [tech stack]
+        **You'll Learn:** [outcomes]
+        
+        Make sure projects are realistic for the user's skill level and time constraints.`;
+    };
+    
+    const parseMultipleIdeas = (generatedContent) => {
+        const sections = generatedContent.split('## ').filter(section => section.trim());
+        return sections.map((section, index) => {
+            const lines = section.split('\n').filter(line => line.trim());
+            const title = lines[0]?.trim() || `Project Idea ${index + 1}`;
+            
+            const description = extractField(lines, 'Description:') || 'Exciting project opportunity';
+            const difficulty = extractField(lines, 'Difficulty:') || 'Intermediate';
+            const time = extractField(lines, 'Time:') || '4-6 weeks';
+            const technologies = extractField(lines, 'Technologies:') || 'Various technologies';
+            const learning = extractField(lines, 'You\'ll Learn:') || 'Valuable skills';
+            
+            return {
+                id: `idea-${index}`,
+                title,
+                description,
+                difficulty,
+                time,
+                technologies,
+                learning,
+                fullContent: section
+            };
+        });
+    };
+    
+    const extractField = (lines, fieldName) => {
+        const line = lines.find(l => l.includes(fieldName));
+        return line ? line.replace(`**${fieldName}**`, '').replace(fieldName, '').trim() : null;
+    };
+    
+    const generateFallbackIdeas = (profile) => {
+        const fallbackIdeas = [
+            {
+                id: 'fallback-1',
+                title: 'Personal Portfolio Website',
+                description: 'Create a responsive portfolio website to showcase your projects and skills.',
+                difficulty: 'Beginner',
+                time: '2-3 weeks',
+                technologies: 'HTML, CSS, JavaScript',
+                learning: 'Web development fundamentals, responsive design'
+            },
+            {
+                id: 'fallback-2',
+                title: 'Task Management App',
+                description: 'Build a full-stack application for managing daily tasks and productivity.',
+                difficulty: 'Intermediate',
+                time: '4-6 weeks',
+                technologies: 'React, Node.js, Database',
+                learning: 'Full-stack development, database design'
+            },
+            {
+                id: 'fallback-3',
+                title: 'Data Analysis Dashboard',
+                description: 'Create an interactive dashboard to visualize and analyze datasets.',
+                difficulty: 'Intermediate',
+                time: '3-4 weeks',
+                technologies: 'Python, Pandas, Visualization libraries',
+                learning: 'Data analysis, visualization, statistical insights'
+            }
+        ];
+        
+        return fallbackIdeas.slice(0, Math.min(6, fallbackIdeas.length));
+    };
+    
+    const handleIdeaSelect = (idea) => {
+        setSelectedIdea(idea);
+        // Generate full project documentation for selected idea
+        onIdeaSelect(idea, userProfile);
+    };
+    
+    const getDifficultyColor = (difficulty) => {
+        switch (difficulty.toLowerCase()) {
+            case 'beginner': return 'text-green-400';
+            case 'intermediate': return 'text-yellow-400';
+            case 'advanced': return 'text-red-400';
+            default: return 'text-gray-400';
+        }
+    };
+    
+    const getDifficultyIcon = (difficulty) => {
+        switch (difficulty.toLowerCase()) {
+            case 'beginner': return '🌱';
+            case 'intermediate': return '🚀';
+            case 'advanced': return '⚡';
+            default: return '📋';
+        }
+    };
+    
+    if (isGenerating) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-gray-700 border-t-gray-400 rounded-full animate-spin mx-auto mb-4"></div>
+                    <h2 className="text-2xl font-bold text-white mb-2">Crafting Your Perfect Projects</h2>
+                    <p className="text-gray-400">Analyzing your profile to generate personalized ideas...</p>
+                </div>
+            </div>
+        );
+    }
+    
+    return (
+        <div className="min-h-screen bg-black">
+            {/* Header */}
+            <div className="bg-gray-900/80 border-b border-gray-800/60 p-6">
+                <div className="max-w-6xl mx-auto">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold text-white mb-2">Your Personalized Project Ideas</h1>
+                            <p className="text-gray-400">Based on your profile: {userProfile.fieldOfStudy} • {userProfile.skillLevel} level</p>
+                        </div>
+                        <button
+                            onClick={onBackToDiscovery}
+                            className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors border border-gray-700/50"
+                        >
+                            ← Back to Discovery
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            {/* Ideas Grid */}
+            <div className="max-w-6xl mx-auto p-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {ideas.map((idea) => (
+                        <div key={idea.id} className="bg-gray-900/60 border border-gray-800/60 rounded-xl p-6 hover:border-gray-700/80 hover:bg-gray-900/80 transition-all duration-300">
+                            <div className="mb-4">
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className={`text-sm font-medium ${getDifficultyColor(idea.difficulty)} flex items-center gap-1`}>
+                                        {getDifficultyIcon(idea.difficulty)} {idea.difficulty}
+                                    </span>
+                                    <span className="text-xs text-gray-500 bg-gray-800/60 px-2 py-1 rounded-full">
+                                        ⏱️ {idea.time}
+                                    </span>
+                                </div>
+                                <h3 className="text-lg font-semibold text-white mb-3">{idea.title}</h3>
+                                <p className="text-gray-300 text-sm mb-4 leading-relaxed">{idea.description}</p>
+                            </div>
+                            
+                            <div className="space-y-3 mb-6">
+                                <div>
+                                    <h4 className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Technologies</h4>
+                                    <p className="text-sm text-gray-300">{idea.technologies}</p>
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">You'll Learn</h4>
+                                    <p className="text-sm text-gray-300">{idea.learning}</p>
+                                </div>
+                            </div>
+                            
+                            <button
+                                onClick={() => handleIdeaSelect(idea)}
+                                className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-lg font-medium transition-colors border border-gray-700/50 flex items-center justify-center gap-2"
+                            >
+                                <span>Choose This Project</span>
+                                <span>→</span>
+                            </button>
+                        </div>
+                    ))}
+                </div>
+                
+                <div className="text-center mt-8">
+                    <button
+                        onClick={generatePersonalizedIdeas}
+                        className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors border border-gray-700/50 flex items-center gap-2 mx-auto"
+                    >
+                        <span>🔄</span>
+                        Generate More Ideas
+                    </button>
+                </div>
             </div>
         </div>
     );
@@ -1530,13 +2162,154 @@ const App = () => {
         );
     }
 
+    // Discovery path states
+    const [discoveryMode, setDiscoveryMode] = useState(false);
+    const [discoveryStep, setDiscoveryStep] = useState('onboarding'); // 'onboarding', 'selection', 'generating'
+    const [userProfile, setUserProfile] = useState(null);
+    const [selectedIdea, setSelectedIdea] = useState(null);
+    
+    const handleDiscoveryPath = () => {
+        setDiscoveryMode(true);
+        setDiscoveryStep('onboarding');
+    };
+    
+    const handleDiscoveryComplete = (profile) => {
+        setUserProfile(profile);
+        setDiscoveryStep('selection');
+    };
+    
+    const handleIdeaSelect = async (idea, profile) => {
+        setSelectedIdea(idea);
+        setDiscoveryStep('generating');
+        
+        try {
+            // Generate full project documentation for the selected idea
+            const prompt = `Generate a comprehensive project plan for: "${idea.title}"
+            
+            Based on user profile:
+            - Field: ${profile.fieldOfStudy}
+            - Skill Level: ${profile.skillLevel}
+            - Interests: ${profile.interests.join(', ')}
+            - Time Available: ${profile.resources.timeAvailable}
+            - Budget: ${profile.resources.budget}
+            - Learning Goals: ${profile.learningGoals.join(', ')}
+            
+            Project Brief: ${idea.description}
+            Technologies: ${idea.technologies}
+            Learning Outcomes: ${idea.learning}
+            
+            Please provide a detailed project plan with:
+            ## Project Title & Overview
+            ## Learning Objectives
+            ## Technical Requirements
+            ## Implementation Phases
+            ## Deliverables
+            ## Resources & Tools
+            ## Timeline & Milestones
+            ## Evaluation Criteria
+            
+            Make it comprehensive and actionable for a ${profile.skillLevel} level student.`;
+            
+            const generateIdea = firebase.functions().httpsCallable('generateIdea');
+            const result = await generateIdea({ prompt });
+            
+            if (result.data.success) {
+                // Exit discovery mode and show the generated project
+                setDiscoveryMode(false);
+                setDiscoveryStep('onboarding');
+                
+                // Set up the app to show the generated idea
+                // This will be handled by the AppScreen component
+                const appScreen = {
+                    generatedIdea: result.data.idea,
+                    currentView: 'result',
+                    discoveryProfile: profile,
+                    selectedDiscoveryIdea: idea
+                };
+                
+                // Store in session storage for AppScreen to pick up
+                sessionStorage.setItem('discoveryResult', JSON.stringify(appScreen));
+                
+                // Auto-save to history
+                try {
+                    const saveIdeaToHistory = firebase.functions().httpsCallable('saveIdeaToHistory');
+                    await saveIdeaToHistory({
+                        userId: user.uid,
+                        idea: result.data.idea,
+                        context: {
+                            discoveryMode: true,
+                            selectedIdea: idea,
+                            userProfile: profile
+                        }
+                    });
+                } catch (saveError) {
+                    console.error('Error saving to history:', saveError);
+                }
+                
+                // Force a re-render to show the result
+                window.location.reload();
+            } else {
+                throw new Error(result.data.error || 'Failed to generate project plan');
+            }
+        } catch (error) {
+            console.error('Error generating project plan:', error);
+            alert('Failed to generate project plan. Please try again.');
+            setDiscoveryStep('selection');
+        }
+    };
+    
+    const handleBackToDiscovery = () => {
+        setDiscoveryStep('onboarding');
+        setUserProfile(null);
+    };
+    
+    const handleExitDiscovery = () => {
+        setDiscoveryMode(false);
+        setDiscoveryStep('onboarding');
+        setUserProfile(null);
+        setSelectedIdea(null);
+    };
+
     return (
         <div className="bg-gray-900 min-h-screen">
             <ParticleSystem />
             {user ? (
-                <AppScreen user={user} onLogout={handleLogout} />
+                discoveryMode ? (
+                    // Discovery Path Flow
+                    <>
+                        {discoveryStep === 'onboarding' && (
+                            <DiscoveryOnboarding 
+                                onComplete={handleDiscoveryComplete}
+                                user={user}
+                            />
+                        )}
+                        {discoveryStep === 'selection' && (
+                            <PersonalizedIdeaSelection 
+                                userProfile={userProfile}
+                                onIdeaSelect={handleIdeaSelect}
+                                onBackToDiscovery={handleBackToDiscovery}
+                                user={user}
+                            />
+                        )}
+                        {discoveryStep === 'generating' && (
+                            <div className="min-h-screen bg-black flex items-center justify-center">
+                                <div className="text-center">
+                                    <div className="w-16 h-16 border-4 border-gray-700 border-t-gray-400 rounded-full animate-spin mx-auto mb-4"></div>
+                                    <h2 className="text-2xl font-bold text-white mb-2">Generating Your Project Plan</h2>
+                                    <p className="text-gray-400">Creating comprehensive documentation for: {selectedIdea?.title}</p>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <AppScreen user={user} onLogout={handleLogout} onDiscoveryMode={handleDiscoveryPath} />
+                )
             ) : (
-                <LoginScreen onLogin={handleLogin} isLoading={isLoading} />
+                <LoginScreen 
+                    onLogin={handleLogin} 
+                    onDiscoveryPath={handleDiscoveryPath}
+                    isLoading={isLoading} 
+                />
             )}
         </div>
     );
