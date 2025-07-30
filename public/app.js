@@ -341,11 +341,20 @@ const DiscoveryOnboarding = ({ onComplete, user }) => {
         const newProgress = ((currentStep + 1) / discoverySteps.length) * 100;
         setProgress(newProgress);
         
+        console.log('Step completed:', currentStep, 'Moving to next step');
+        
         if (currentStep < discoverySteps.length - 1) {
-            setTimeout(() => setCurrentStep(currentStep + 1), 500);
+            // Ensure we wait long enough after the encouragement message before moving to the next step
+            setTimeout(() => {
+                console.log('Setting current step to:', currentStep + 1);
+                setCurrentStep(currentStep + 1);
+            }, 800);
         } else {
             // Complete the discovery process
-            setTimeout(() => onComplete(newProfile), 1000);
+            setTimeout(() => {
+                console.log('Discovery completed, calling onComplete');
+                onComplete(newProfile);
+            }, 1000);
         }
     };
     
@@ -405,9 +414,10 @@ const DiscoveryStep = ({ step, onComplete, stepNumber, totalSteps }) => {
     const handleSingleChoice = (value) => {
         setSelectedValue(value);
         setShowEncouragement(true);
+        // Ensure the timeout is long enough to show the encouragement message but not too long
         setTimeout(() => {
             onComplete({ value });
-        }, 1000);
+        }, 1500);
     };
     
     const handleMultiChoice = (value) => {
@@ -420,18 +430,20 @@ const DiscoveryStep = ({ step, onComplete, stepNumber, totalSteps }) => {
     const handleMultiChoiceSubmit = () => {
         if (selectedValues.length > 0) {
             setShowEncouragement(true);
+            // Ensure the timeout is long enough to show the encouragement message but not too long
             setTimeout(() => {
                 onComplete({ values: selectedValues });
-            }, 1000);
+            }, 1500);
         }
     };
     
     const handleFormSubmit = () => {
         if (Object.keys(formData).length === step.fields.length) {
             setShowEncouragement(true);
+            // Ensure the timeout is long enough to show the encouragement message but not too long
             setTimeout(() => {
                 onComplete(formData);
-            }, 1000);
+            }, 1500);
         }
     };
     
@@ -2084,6 +2096,7 @@ const App = () => {
     const [discoveryStep, setDiscoveryStep] = useState('onboarding'); // 'onboarding', 'selection', 'generating'
     const [userProfile, setUserProfile] = useState(null);
     const [selectedIdea, setSelectedIdea] = useState(null);
+    const [forceRender, setForceRender] = useState(0); // Add this state to force re-render when needed
 
     useEffect(() => {
         // Check if Firebase is available
@@ -2159,8 +2172,11 @@ const App = () => {
     };
     
     const handleDiscoveryComplete = (profile) => {
+        console.log('Discovery onboarding completed, profile:', profile);
         setUserProfile(profile);
         setDiscoveryStep('selection');
+        // Force a re-render to ensure the UI updates
+        setForceRender(prev => prev + 1);
     };
     
     const handleIdeaSelect = async (idea, profile) => {
@@ -2300,6 +2316,7 @@ const App = () => {
                     <>
                         {discoveryStep === 'onboarding' && (
                             <DiscoveryOnboarding 
+                                key={`onboarding-${forceRender}`} // Add a key to force re-render when needed
                                 onComplete={handleDiscoveryComplete}
                                 user={user}
                             />
