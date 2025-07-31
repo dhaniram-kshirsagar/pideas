@@ -1980,8 +1980,8 @@ const AppScreen = ({ user, onLogout }) => {
         }
 
         try {
-            const getGameSteps = functions.httpsCallable('getGameSteps');
-            const result = await getGameSteps({});
+            const gameStepsGet = functions.httpsCallable('gameStepsGet');
+            const result = await gameStepsGet({});
             
             if (result.data.success) {
                 setGameSteps(result.data.steps);
