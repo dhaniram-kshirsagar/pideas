@@ -173,8 +173,11 @@ const LoginScreen = ({ onLogin, onDiscoveryPath, isLoading }) => {
             {/* Main content container with clear vertical separation */}
             <div className="relative z-10 min-h-screen flex flex-col">
                 {/* Top header with fixed height for logo */}
-                <header className="w-full h-32 flex items-center justify-center">
-                    <div className="text-white text-5xl font-bold">Pideas</div>
+                <header className="w-full h-32 flex items-center justify-center relative">
+                    {/* Interactive logo component */}
+                    <div className="absolute inset-0" style={{ zIndex: 5 }}>
+                        <InteractiveLogo />
+                    </div>
                 </header>
                 
                 {/* Content area with cards - takes remaining space */}
