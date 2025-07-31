@@ -172,10 +172,10 @@ const LoginScreen = ({ onLogin, onDiscoveryPath, isLoading }) => {
             
             {/* Main content container with clear vertical separation */}
             <div className="relative z-10 min-h-screen flex flex-col">
-                {/* Top header with adjusted height for logo */}
-                <header className="w-full h-48 flex items-center justify-center relative">
-                    {/* Interactive logo component - positioned lower to cover empty space */}
-                    <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 5, marginTop: '40px' }}>
+                {/* Top header with proper height for logo */}
+                <header className="w-full h-40 flex items-center justify-center relative">
+                    {/* Interactive logo component with proper container */}
+                    <div className="w-full h-full relative" style={{ zIndex: 5 }}>
                         <InteractiveLogo />
                     </div>
                 </header>
