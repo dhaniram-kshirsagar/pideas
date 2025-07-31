@@ -2552,15 +2552,18 @@ const AppScreen = ({ user, onLogout }) => {
                                 </div>
                             )}
                             
-                            {/* User profile dropdown - rendered at root level for proper stacking */}
-                            {showProfileDropdown && createPortal(
-                                <UserProfileDropdown 
-                                    user={user} 
-                                    userRole={userRole} 
-                                    onClose={() => setShowProfileDropdown(false)}
-                                    onLogout={onLogout}
-                                />,
-                                document.body
+                            {/* User profile dropdown - positioned absolutely with high z-index */}
+                            {showProfileDropdown && (
+                                <div className="fixed inset-0 z-[9999]" style={{ pointerEvents: 'none' }}>
+                                    <div className="absolute right-0 top-[60px] mr-4" style={{ pointerEvents: 'auto' }}>
+                                        <UserProfileDropdown 
+                                            user={user} 
+                                            userRole={userRole} 
+                                            onClose={() => setShowProfileDropdown(false)}
+                                            onLogout={onLogout}
+                                        />
+                                    </div>
+                                </div>
                             )}
                         </div>
                         
