@@ -1,5 +1,49 @@
 const { useState, useEffect, useRef } = React;
 
+// Add CSS animations
+const styleSheet = document.createElement("style");
+styleSheet.textContent = `
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+    
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-out forwards;
+    }
+    
+    .animate-fade-out {
+        animation: fadeOut 0.3s ease-out forwards;
+    }
+    
+    .profile-dropdown-enter {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+    
+    .profile-dropdown-enter-active {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        transition: opacity 200ms, transform 200ms;
+    }
+    
+    .profile-dropdown-exit {
+        opacity: 1;
+    }
+    
+    .profile-dropdown-exit-active {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+        transition: opacity 200ms, transform 200ms;
+    }
+`;
+document.head.appendChild(styleSheet);
+
 // Import the InteractiveLogo component
 // InteractiveLogo.js must be loaded before this script
 
@@ -1916,6 +1960,170 @@ const HistoryView = ({ user, onBack, onViewIdea }) => {
     );
 };
 
+// User Profile Icon Component
+const UserProfileIcon = ({ onClick }) => {
+    return (
+        <button 
+            onClick={onClick}
+            className="w-10 h-10 rounded-full bg-black flex items-center justify-center cursor-pointer hover:bg-gray-900 transition-all duration-200"
+            aria-label="Open user profile"
+        >
+            <div className="w-8 h-8 relative">
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                    <path 
+                        d="M50,15 C60,15 70,25 70,40 C70,47 65,55 60,58 C57,60 55,62 55,65 L55,70 C55,72 53,75 50,75 C47,75 45,72 45,70 L45,65 C45,62 43,60 40,58 C35,55 30,47 30,40 C30,25 40,15 50,15 Z" 
+                        fill="none" 
+                        stroke="#4ade80" 
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                    />
+                    <circle cx="40" cy="40" r="5" fill="#4ade80" />
+                    <circle cx="60" cy="40" r="5" fill="#4ade80" />
+                    <path 
+                        d="M35,80 C35,80 40,85 50,85 C60,85 65,80 65,80" 
+                        fill="none" 
+                        stroke="#4ade80" 
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                    />
+                </svg>
+            </div>
+        </button>
+    );
+};
+
+// User Profile Dropdown Component
+const UserProfileDropdown = ({ user, userRole, onClose, onLogout }) => {
+    const dropdownRef = useRef(null);
+    
+    useEffect(() => {
+        // Handle click outside to close dropdown
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                onClose();
+            }
+        };
+        
+        // Handle escape key to close dropdown
+        const handleEscKey = (event) => {
+            if (event.key === 'Escape') {
+                onClose();
+            }
+        };
+        
+        // Add event listeners
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscKey);
+        
+        // Clean up event listeners
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscKey);
+        };
+    }, [onClose]);
+    
+    // Handle logout click
+    const handleLogout = (e) => {
+        e.preventDefault();
+        onClose();
+        onLogout();
+    };
+    
+    return (
+        <div 
+            ref={dropdownRef}
+            className="absolute right-0 top-full mt-2 w-80 bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden animate-fade-in-down"
+            style={{
+                transformOrigin: 'top right',
+                animation: 'fadeIn 0.2s ease-out',
+                right: '0',
+                maxWidth: 'calc(100vw - 20px)'  // Ensure it doesn't overflow screen width
+            }}
+        >
+            <div className="relative overflow-hidden">
+                {/* Gradient background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-teal-500/20 to-purple-600/20 z-0"></div>
+                
+                {/* Profile header */}
+                <div className="relative z-10 p-6 flex items-center">
+                    <div className="w-16 h-16 rounded-full bg-black flex items-center justify-center mr-4 border-2 border-green-400">
+                        <div className="w-12 h-12">
+                            <svg viewBox="0 0 100 100" className="w-full h-full">
+                                <path 
+                                    d="M50,15 C60,15 70,25 70,40 C70,47 65,55 60,58 C57,60 55,62 55,65 L55,70 C55,72 53,75 50,75 C47,75 45,72 45,70 L45,65 C45,62 43,60 40,58 C35,55 30,47 30,40 C30,25 40,15 50,15 Z" 
+                                    fill="none" 
+                                    stroke="#4ade80" 
+                                    strokeWidth="4"
+                                    strokeLinecap="round"
+                                />
+                                <circle cx="40" cy="40" r="5" fill="#4ade80" />
+                                <circle cx="60" cy="40" r="5" fill="#4ade80" />
+                                <path 
+                                    d="M35,80 C35,80 40,85 50,85 C60,85 65,80 65,80" 
+                                    fill="none" 
+                                    stroke="#4ade80" 
+                                    strokeWidth="4"
+                                    strokeLinecap="round"
+                                />
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold text-white">{user.displayName}</h3>
+                        <p className="text-green-400 text-sm">{userRole?.isAdmin ? 'Administrator' : 'User'}</p>
+                    </div>
+                </div>
+                
+                {/* User details */}
+                <div className="px-6 pb-4 relative z-10">
+                    <div className="mb-4">
+                        <p className="text-gray-400 text-xs mb-1">Email Address</p>
+                        <p className="text-white text-sm">{user.email}</p>
+                    </div>
+                    
+                    <div className="mb-4">
+                        <p className="text-gray-400 text-xs mb-1">Location</p>
+                        <p className="text-white text-sm flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                            </svg>
+                            Coding Galaxy
+                        </p>
+                    </div>
+                    
+                    <div className="pt-4 border-t border-gray-700">
+                        <p className="text-gray-400 text-xs mb-2">Bio</p>
+                        <p className="text-white text-sm">
+                            From the distant Cosmic Ocean,<br/>
+                            I travel galaxies to decode mysteries<br/>
+                            and collect strange codes.
+                        </p>
+                    </div>
+                </div>
+                
+                {/* Footer with links */}
+                <div className="flex border-t border-gray-700 relative z-10">
+                    <a href="#" className="flex-1 py-3 text-center text-gray-300 hover:bg-gray-800 transition-colors text-sm">
+                        <svg className="w-5 h-5 mx-auto mb-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                        </svg>
+                        Settings
+                    </a>
+                    <button 
+                        onClick={handleLogout}
+                        className="flex-1 py-3 text-center text-gray-300 hover:bg-gray-800 transition-colors text-sm border-l border-gray-700"
+                    >
+                        <svg className="w-5 h-5 mx-auto mb-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+                        </svg>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // Main App Screen Component
 const AppScreen = ({ user, onLogout }) => {
     const [currentView, setCurrentView] = useState('welcome');
@@ -1931,6 +2139,10 @@ const AppScreen = ({ user, onLogout }) => {
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
     const [userRole, setUserRole] = useState(null);
     const [isLoadingRole, setIsLoadingRole] = useState(true);
+    
+    // User profile states
+    const [showWelcome, setShowWelcome] = useState(true);
+    const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
     const functions = typeof firebase !== 'undefined' ? firebase.functions() : null;
     const firestore = typeof firebase !== 'undefined' ? firebase.firestore() : null;
@@ -1979,6 +2191,13 @@ const AppScreen = ({ user, onLogout }) => {
     useEffect(() => {
         loadUserRole();
         loadUserHistory();
+        
+        // Set timer to hide welcome message after 4 seconds
+        const welcomeTimer = setTimeout(() => {
+            setShowWelcome(false);
+        }, 4000);
+        
+        return () => clearTimeout(welcomeTimer);
     }, [user]);
 
     const startGameFlow = async () => {
@@ -2169,7 +2388,39 @@ const AppScreen = ({ user, onLogout }) => {
                                 Admin Console
                             </button>
                         )}
-                        <span className="text-gray-300">Welcome, {user.displayName}</span>
+                        
+                        {/* User profile section with animation */}
+                        <div className="relative flex items-center">
+                            {/* Animated welcome message */}
+                            {showWelcome && (
+                                <span 
+                                    className={`text-gray-300 ${!showWelcome ? 'animate-fade-out' : 'animate-fade-in'}`}
+                                    style={{ minWidth: '150px' }}
+                                >
+                                    Welcome, {user.displayName}
+                                </span>
+                            )}
+                            
+                            {/* User profile icon (shows after welcome fades) */}
+                            {!showWelcome && (
+                                <div className="animate-fade-in">
+                                    <UserProfileIcon onClick={() => setShowProfileDropdown(!showProfileDropdown)} />
+                                </div>
+                            )}
+                            
+                            {/* User profile dropdown */}
+                            {showProfileDropdown && (
+                                <div className="relative">
+                                    <UserProfileDropdown 
+                                        user={user} 
+                                        userRole={userRole} 
+                                        onClose={() => setShowProfileDropdown(false)}
+                                        onLogout={onLogout}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                        
                         <button
                             onClick={onLogout}
                             className="text-gray-400 hover:text-white transition-colors"
