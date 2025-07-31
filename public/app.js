@@ -121,13 +121,13 @@ const ParticleSystem = () => {
 const LoginScreen = ({ onLogin, onDiscoveryPath, isLoading }) => {
     return (
         <div className="min-h-screen flex flex-col relative bg-black">
-            {/* Logo positioned in upper portion */}
-            <div className="flex-1 flex items-center justify-center mb-8">
+            {/* Logo positioned at top */}
+            <div className="pt-12 pb-8 flex justify-center">
                 <InteractiveLogo />
             </div>
             
             {/* Dual Login Cards */}
-            <div className="content z-10 pb-20 px-4">
+            <div className="content z-10 flex-1 flex items-center justify-center pb-20 px-4">
                 <div className="max-w-4xl mx-auto">
                     <h2 className="text-2xl font-bold text-white text-center mb-8">
                         Choose Your Path to Project Success
