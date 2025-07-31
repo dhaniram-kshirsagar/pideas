@@ -1,4 +1,4 @@
-const { useState, useEffect, useRef, useCallback } = React;
+const { useState, useEffect, useRef, useCallback, createPortal } = React;
 
 // Add CSS animations
 const styleSheet = document.createElement("style");
@@ -2552,16 +2552,15 @@ const AppScreen = ({ user, onLogout }) => {
                                 </div>
                             )}
                             
-                            {/* User profile dropdown */}
-                            {showProfileDropdown && (
-                                <div className="relative">
-                                    <UserProfileDropdown 
-                                        user={user} 
-                                        userRole={userRole} 
-                                        onClose={() => setShowProfileDropdown(false)}
-                                        onLogout={onLogout}
-                                    />
-                                </div>
+                            {/* User profile dropdown - rendered at root level for proper stacking */}
+                            {showProfileDropdown && createPortal(
+                                <UserProfileDropdown 
+                                    user={user} 
+                                    userRole={userRole} 
+                                    onClose={() => setShowProfileDropdown(false)}
+                                    onLogout={onLogout}
+                                />,
+                                document.body
                             )}
                         </div>
                         
