@@ -2153,7 +2153,7 @@ const UserProfileDropdown = ({ user, userRole, onClose, onLogout }) => {
     return (
         <div 
             ref={dropdownRef}
-            className="absolute right-0 top-full mt-2 w-80 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl z-50 overflow-hidden"
+            className="absolute right-0 top-full mt-2 w-80 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl z-[9999] overflow-hidden"
             style={{
                 transformOrigin: 'top right',
                 animation: 'fadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
