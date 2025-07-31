@@ -1,4 +1,4 @@
-const { useState, useEffect, useRef } = React;
+const { useState, useEffect, useRef, useCallback } = React;
 
 // Add CSS animations
 const styleSheet = document.createElement("style");
@@ -173,7 +173,7 @@ const LoginScreen = ({ onLogin, onDiscoveryPath, isLoading }) => {
             {/* Main content container with clear vertical separation */}
             <div className="relative z-10 min-h-screen flex flex-col">
                 {/* Top header with reduced height for logo */}
-                <header className="w-full h-24 flex items-center justify-center relative">
+                <header className="w-full h-32 flex items-center justify-center relative">
                     {/* Interactive logo component */}
                     <div className="absolute inset-0" style={{ zIndex: 5 }}>
                         <InteractiveLogo />
@@ -181,9 +181,9 @@ const LoginScreen = ({ onLogin, onDiscoveryPath, isLoading }) => {
                 </header>
                 
                 {/* Content area with cards - reduced top padding */}
-                <main className="flex-1 flex items-center justify-center px-4 pb-10 pt-0">
+                <main className="flex-1 flex items-center justify-center px-4 pb-10 pt-10">
                     <div className="max-w-4xl mx-auto w-full">
-                        <h2 className="text-2xl font-bold text-white text-center mb-4">
+                        <h2 className="text-2xl font-bold text-white text-center mb-8">
                             Choose Your Path to Project Success
                         </h2>
                         
