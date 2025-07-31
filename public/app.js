@@ -1,11 +1,56 @@
 const { useState, useEffect, useRef, useCallback, createPortal } = React;
 
-// Add CSS animations
+// Add CSS animations and tooltip styles
 const styleSheet = document.createElement("style");
 styleSheet.textContent = `
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(-10px); }
         to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Tooltip styles */
+    .tooltip {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .tooltip .tooltip-text {
+        visibility: hidden;
+        width: max-content;
+        max-width: 200px;
+        background-color: #1f2937;
+        color: #f9fafb;
+        text-align: center;
+        border-radius: 6px;
+        padding: 8px 12px;
+        position: absolute;
+        z-index: 10000;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -60px;
+        opacity: 0;
+        transition: opacity 0.3s, visibility 0.3s;
+        font-size: 12px;
+        font-weight: 500;
+        border: 1px solid #374151;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        white-space: nowrap;
+    }
+    
+    .tooltip .tooltip-text::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #1f2937 transparent transparent transparent;
+    }
+    
+    .tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
     }
     
     @keyframes fadeOut {
@@ -43,6 +88,37 @@ styleSheet.textContent = `
     }
 `;
 document.head.appendChild(styleSheet);
+
+// IconButton Component - Reusable button with icon and tooltip
+const IconButton = ({ 
+    icon, 
+    tooltip, 
+    onClick, 
+    className = "", 
+    disabled = false,
+    variant = "default" // "default", "primary", "admin"
+}) => {
+    const baseClasses = "relative inline-flex items-center justify-center p-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 tooltip";
+    
+    const variantClasses = {
+        default: "text-gray-400 hover:text-white hover:bg-gray-800/50",
+        primary: "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white",
+        admin: "bg-purple-600 hover:bg-purple-700 text-white"
+    };
+    
+    const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer";
+    
+    return (
+        <button
+            onClick={disabled ? undefined : onClick}
+            className={`${baseClasses} ${variantClasses[variant]} ${disabledClasses} ${className}`}
+            disabled={disabled}
+        >
+            <span className="text-lg">{icon}</span>
+            <span className="tooltip-text">{tooltip}</span>
+        </button>
+    );
+};
 
 // Import the InteractiveLogo component
 // InteractiveLogo.js must be loaded before this script
@@ -1473,17 +1549,14 @@ const SectionEditor = ({ section, onModify, isLoading }) => {
                     <span className="text-2xl">{section.icon}</span>
                     <h2 className="text-xl font-semibold text-white">{section.title}</h2>
                 </div>
-                <button
+                <IconButton
+                    icon={showEditor ? "❌" : "✏️"}
+                    tooltip={isLoading ? 'Modifying...' : showEditor ? 'Cancel Edit' : 'Modify Section'}
                     onClick={() => setShowEditor(!showEditor)}
                     disabled={isLoading}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        showEditor
-                            ? 'bg-red-600/20 border border-red-500/40 text-red-400 hover:bg-red-600/30'
-                            : 'bg-blue-600/20 border border-blue-500/40 text-blue-400 hover:bg-blue-600/30'
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                    {isLoading ? 'Modifying...' : showEditor ? 'Cancel Edit' : 'Modify Section'}
-                </button>
+                    variant={showEditor ? "default" : "primary"}
+                    className={showEditor ? "text-red-400 hover:text-red-300" : ""}
+                />
             </div>
 
             {/* Section Content */}
@@ -1798,19 +1871,20 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                     </div>
                     <div className="flex items-center gap-3">
                         {modificationHistory.length > 0 && (
-                            <button
+                            <IconButton
+                                icon="🔄"
+                                tooltip="Reset to Original"
                                 onClick={handleResetToOriginal}
-                                className="bg-gray-700/60 hover:bg-gray-600/60 text-gray-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-600/40"
-                            >
-                                Reset to Original
-                            </button>
+                                variant="default"
+                                className="text-gray-300 hover:text-white"
+                            />
                         )}
-                        <button
+                        <IconButton
+                            icon="💡"
+                            tooltip="Generate New Idea"
                             onClick={onStartNew}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-                        >
-                            Generate New Idea
-                        </button>
+                            variant="primary"
+                        />
                     </div>
                 </div>
             </div>
@@ -2518,19 +2592,19 @@ const AppScreen = ({ user, onLogout }) => {
                         <span className="text-gray-300">Gamified Project Idea Generator</span>
                     </div>
                     <div className="flex items-center gap-4">
-                        <button
+                        <IconButton
+                            icon="🕒"
+                            tooltip="History"
                             onClick={() => setCurrentView('history')}
-                            className="text-gray-400 hover:text-white transition-colors"
-                        >
-                            History
-                        </button>
+                            variant="default"
+                        />
                         {userRole?.isAdmin && (
-                            <button
+                            <IconButton
+                                icon="⚙️"
+                                tooltip="Admin Console"
                                 onClick={() => setCurrentView('admin')}
-                                className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
-                            >
-                                Admin Console
-                            </button>
+                                variant="admin"
+                            />
                         )}
                         
                         {/* User profile section with animation */}
@@ -2567,12 +2641,12 @@ const AppScreen = ({ user, onLogout }) => {
                             )}
                         </div>
                         
-                        <button
+                        <IconButton
+                            icon="🚪"
+                            tooltip="Logout"
                             onClick={onLogout}
-                            className="text-gray-400 hover:text-white transition-colors"
-                        >
-                            Logout
-                        </button>
+                            variant="default"
+                        />
                     </div>
                 </div>
             </header>
