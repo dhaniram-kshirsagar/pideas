@@ -1790,7 +1790,7 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                 </div>
                 
                 {/* Fixed Chat Input for Overall Idea Modification - Only covers details area */}
-                <div className="sticky bottom-0 right-0 left-80 bg-black/90 border-t border-gray-800/60 p-4 shadow-lg z-20">
+                <div className="sticky bottom-0 right-0 ml-80 bg-black/90 border-t border-gray-800/60 p-4 shadow-lg z-20">
                     <ChatModificationInterface 
                         onModifyIdea={handleOverallIdeaModify}
                         isLoading={isModifying}
