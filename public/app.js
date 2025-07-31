@@ -172,16 +172,16 @@ const LoginScreen = ({ onLogin, onDiscoveryPath, isLoading }) => {
             
             {/* Main content container with clear vertical separation */}
             <div className="relative z-10 min-h-screen flex flex-col">
-                {/* Top header with reduced height for logo */}
-                <header className="w-full h-32 flex items-center justify-center relative">
-                    {/* Interactive logo component */}
-                    <div className="absolute inset-0" style={{ zIndex: 5 }}>
+                {/* Top header with adjusted height for logo */}
+                <header className="w-full h-48 flex items-center justify-center relative">
+                    {/* Interactive logo component - positioned lower to cover empty space */}
+                    <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 5, marginTop: '40px' }}>
                         <InteractiveLogo />
                     </div>
                 </header>
                 
-                {/* Content area with cards - reduced top padding */}
-                <main className="flex-1 flex items-center justify-center px-4 pb-10 pt-10">
+                {/* Content area with cards - adjusted padding for better spacing */}
+                <main className="flex-1 flex items-center justify-center px-4 pb-10 pt-0">
                     <div className="max-w-4xl mx-auto w-full">
                         <h2 className="text-2xl font-bold text-white text-center mb-8">
                             Choose Your Path to Project Success
