@@ -120,20 +120,27 @@ const ParticleSystem = () => {
 // Dual-Path Login Screen Component
 const LoginScreen = ({ onLogin, onDiscoveryPath, isLoading }) => {
     return (
-        <div className="min-h-screen flex flex-col relative bg-black">
-            {/* Logo positioned at top */}
-            <div className="pt-12 pb-8 flex justify-center">
-                <InteractiveLogo />
+        <div className="min-h-screen bg-black relative overflow-hidden">
+            {/* Fixed position background particles */}
+            <div className="fixed inset-0 z-0">
+                <ParticleSystem />
             </div>
             
-            {/* Dual Login Cards */}
-            <div className="content z-10 flex-1 flex items-center justify-center pb-20 px-4">
-                <div className="max-w-4xl mx-auto">
-                    <h2 className="text-2xl font-bold text-white text-center mb-8">
-                        Choose Your Path to Project Success
-                    </h2>
-                    
-                    <div className="grid md:grid-cols-2 gap-6">
+            {/* Main content container with clear vertical separation */}
+            <div className="relative z-10 min-h-screen flex flex-col">
+                {/* Top header with fixed height for logo */}
+                <header className="w-full h-32 flex items-center justify-center">
+                    <div className="text-white text-5xl font-bold">Pideas</div>
+                </header>
+                
+                {/* Content area with cards - takes remaining space */}
+                <main className="flex-1 flex items-center justify-center px-4 pb-10 pt-10">
+                    <div className="max-w-4xl mx-auto w-full">
+                        <h2 className="text-2xl font-bold text-white text-center mb-8">
+                            Choose Your Path to Project Success
+                        </h2>
+                        
+                        <div className="grid md:grid-cols-2 gap-6">
                         {/* Existing Users Card */}
                         <div className="bg-gray-900/80 border border-gray-700/50 rounded-xl p-6 hover:border-gray-600/70 transition-all duration-300 hover:bg-gray-900/90">
                             <div className="text-center">
@@ -200,7 +207,8 @@ const LoginScreen = ({ onLogin, onDiscoveryPath, isLoading }) => {
                     <p className="text-center text-gray-400 text-sm mt-6">
                         Both paths lead to the same powerful project generation system
                     </p>
-                </div>
+                    </div>
+                </main>
             </div>
         </div>
     );
