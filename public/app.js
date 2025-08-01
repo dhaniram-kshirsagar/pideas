@@ -431,90 +431,184 @@ const DiscoveryOnboarding = ({ onComplete, user }) => {
     
     const discoverySteps = [
         {
-            id: 'field',
-            title: '🎓 What\'s Your Academic Focus?',
-            subtitle: 'Tell us about your field of study',
+            id: 'stream',
+            title: '🎓 What\'s your academic stream?',
+            subtitle: 'Select your field of study',
             type: 'single-choice',
             options: [
-                { value: 'computer-science', label: 'Computer Science', icon: '💻' },
-                { value: 'engineering', label: 'Engineering', icon: '⚙️' },
-                { value: 'data-science', label: 'Data Science', icon: '📊' },
-                { value: 'web-development', label: 'Web Development', icon: '🌐' },
-                { value: 'mobile-development', label: 'Mobile Development', icon: '📱' },
-                { value: 'ai-ml', label: 'AI/Machine Learning', icon: '🤖' },
-                { value: 'cybersecurity', label: 'Cybersecurity', icon: '🔒' },
-                { value: 'other', label: 'Other/Interdisciplinary', icon: '🎯' }
+                { value: 'computer-science', label: 'Computer Science/IT', icon: '💻' },
+                { value: 'electronics', label: 'Electronics/ECE', icon: '🔌' },
+                { value: 'mechanical', label: 'Mechanical Engineering', icon: '⚙️' },
+                { value: 'civil', label: 'Civil Engineering', icon: '🏗️' },
+                { value: 'chemical', label: 'Chemical Engineering', icon: '🧪' },
+                { value: 'biotech', label: 'Biotechnology', icon: '🧬' },
+                { value: 'sciences', label: 'Pure Sciences', icon: '🔬' },
+                { value: 'mathematics', label: 'Mathematics', icon: '🔢' }
             ]
         },
         {
-            id: 'skill',
-            title: '⭐ What\'s Your Skill Level?',
-            subtitle: 'Be honest - this helps us match you perfectly!',
+            id: 'year',
+            title: '📚 What\'s your current academic year?',
+            subtitle: 'This helps us match project complexity',
             type: 'single-choice',
             options: [
-                { value: 'beginner', label: 'Beginner', description: 'Just starting out, eager to learn', icon: '🌱' },
-                { value: 'intermediate', label: 'Intermediate', description: 'Some experience, ready for challenges', icon: '🚀' },
-                { value: 'advanced', label: 'Advanced', description: 'Experienced, looking for complex projects', icon: '⚡' }
+                { value: '1st-year', label: '1st Year (Freshman)', description: 'Building fundamentals', icon: '1️⃣' },
+                { value: '2nd-year', label: '2nd Year (Sophomore)', description: 'Developing core skills', icon: '2️⃣' },
+                { value: '3rd-year', label: '3rd Year (Junior)', description: 'Applying knowledge', icon: '3️⃣' },
+                { value: '4th-year', label: '4th Year (Senior)', description: 'Advanced applications', icon: '4️⃣' },
+                { value: 'graduate', label: 'Graduate/Masters', description: 'Specialized expertise', icon: '🎓' }
             ]
         },
         {
             id: 'interests',
-            title: '❤️ What Excites You Most?',
-            subtitle: 'Select all that spark your curiosity (multiple choices)',
+            title: '🚀 What type of project excites you most?',
+            subtitle: 'Select all that interest you (multiple choices)',
             type: 'multi-choice',
             options: [
-                { value: 'web-apps', label: 'Web Applications', icon: '🌐' },
-                { value: 'mobile-apps', label: 'Mobile Apps', icon: '📱' },
-                { value: 'games', label: 'Game Development', icon: '🎮' },
-                { value: 'ai-projects', label: 'AI/ML Projects', icon: '🤖' },
-                { value: 'data-analysis', label: 'Data Analysis', icon: '📈' },
-                { value: 'iot', label: 'IoT & Hardware', icon: '🔧' },
-                { value: 'blockchain', label: 'Blockchain', icon: '⛓️' },
-                { value: 'automation', label: 'Automation Tools', icon: '🤖' }
+                { value: 'web-mobile', label: 'Web/Mobile Applications', icon: '🌐' },
+                { value: 'ai-ml', label: 'AI/Machine Learning', icon: '🤖' },
+                { value: 'iot-hardware', label: 'IoT/Hardware Projects', icon: '🔧' },
+                { value: 'data-analysis', label: 'Data Analysis/Visualization', icon: '📊' },
+                { value: 'game-dev', label: 'Game Development', icon: '🎮' },
+                { value: 'automation', label: 'Automation/Robotics', icon: '🦾' },
+                { value: 'research', label: 'Research/Analysis', icon: '🔬' },
+                { value: 'social-impact', label: 'Social Impact Projects', icon: '🌍' }
             ]
         },
         {
-            id: 'resources',
-            title: '⏰ What Resources Do You Have?',
-            subtitle: 'Help us suggest realistic projects for you',
-            type: 'resource-form',
-            fields: [
-                {
-                    name: 'timeAvailable',
-                    label: 'Time Available',
-                    type: 'select',
-                    options: [
-                        { value: '1-2weeks', label: '1-2 weeks' },
-                        { value: '1month', label: '1 month' },
-                        { value: '2-3months', label: '2-3 months' },
-                        { value: 'semester', label: 'Full semester' }
-                    ]
-                },
-                {
-                    name: 'budget',
-                    label: 'Budget Range',
-                    type: 'select',
-                    options: [
-                        { value: 'free', label: 'Free resources only' },
-                        { value: 'minimal', label: 'Under $50' },
-                        { value: 'moderate', label: '$50-200' },
-                        { value: 'flexible', label: 'Flexible budget' }
-                    ]
-                }
+            id: 'skillLevel',
+            title: '⭐ How would you rate your programming/technical skills?',
+            subtitle: 'Be honest - this helps us match you with appropriate projects',
+            type: 'single-choice',
+            options: [
+                { value: 'beginner', label: 'Beginner (Just starting)', description: 'Learning fundamentals', icon: '🌱' },
+                { value: 'intermediate', label: 'Intermediate (Some projects done)', description: 'Comfortable with basics', icon: '🚀' },
+                { value: 'advanced', label: 'Advanced (Multiple complex projects)', description: 'Can tackle challenging tasks', icon: '⚡' },
+                { value: 'expert', label: 'Expert (Teaching/Mentoring others)', description: 'Deep technical knowledge', icon: '🧠' }
             ]
         },
         {
-            id: 'goals',
-            title: '🎯 What Do You Want to Achieve?',
-            subtitle: 'Select your learning objectives (multiple choices)',
+            id: 'teamSize',
+            title: '👥 What\'s your preferred team size?',
+            subtitle: 'How many people would you like to work with?',
+            type: 'single-choice',
+            options: [
+                { value: 'solo', label: 'Solo Project (Individual)', icon: '🧑‍💻' },
+                { value: 'pair', label: 'Pair Programming (2 people)', icon: '👥' },
+                { value: 'small-team', label: 'Small Team (3-4 people)', icon: '👨‍👩‍👧' },
+                { value: 'large-team', label: 'Large Team (5+ people)', icon: '👨‍👩‍👧‍👦' }
+            ]
+        },
+        {
+            id: 'projectDuration',
+            title: '⏰ How much time can you dedicate to this project?',
+            subtitle: 'This helps us suggest appropriately scoped projects',
+            type: 'single-choice',
+            options: [
+                { value: 'quick', label: 'Quick Sprint (1-2 weeks)', icon: '⚡' },
+                { value: 'short', label: 'Short Term (1 month)', icon: '📅' },
+                { value: 'medium', label: 'Medium Term (2-3 months)', icon: '📆' },
+                { value: 'long', label: 'Long Term (6+ months)', icon: '🗓️' }
+            ]
+        },
+        {
+            id: 'budgetRange',
+            title: '💰 What\'s your budget range for this project?',
+            subtitle: 'In Indian Rupees (INR)',
+            type: 'single-choice',
+            options: [
+                { value: 'no-budget', label: 'No Budget (Free resources only)', description: '₹0', icon: '👍' },
+                { value: 'low-budget', label: 'Low Budget', description: '₹1,000 - ₹5,000', icon: '💸' },
+                { value: 'medium-budget', label: 'Medium Budget', description: '₹5,000 - ₹15,000', icon: '💵' },
+                { value: 'high-budget', label: 'High Budget', description: '₹15,000+', icon: '💰' }
+            ]
+        },
+        {
+            id: 'learningGoals',
+            title: '🎯 What do you want to achieve with this project?',
+            subtitle: 'Select your primary objectives (multiple choices)',
             type: 'multi-choice',
             options: [
                 { value: 'portfolio', label: 'Build Portfolio', icon: '💼' },
                 { value: 'learn-tech', label: 'Learn New Technology', icon: '📚' },
                 { value: 'solve-problem', label: 'Solve Real Problems', icon: '🔧' },
-                { value: 'job-ready', label: 'Become Job-Ready', icon: '💼' },
+                { value: 'job-ready', label: 'Become Job-Ready', icon: '💻' },
                 { value: 'startup-idea', label: 'Explore Startup Ideas', icon: '🚀' },
-                { value: 'academic-project', label: 'Complete Academic Project', icon: '🎓' }
+                { value: 'academic-project', label: 'Complete Academic Project', icon: '🎓' },
+                { value: 'research-paper', label: 'Publish Research Paper', icon: '📓' },
+                { value: 'competition', label: 'Win Competition/Hackathon', icon: '🏆' }
+            ]
+        },
+        {
+            id: 'preferredTechnologies',
+            title: '💻 Which technologies are you most comfortable with?',
+            subtitle: 'Select all that you have experience with (multiple choices)',
+            type: 'multi-choice',
+            options: [
+                { value: 'python', label: 'Python/Django/Flask', icon: '🐍' },
+                { value: 'javascript', label: 'JavaScript/React/Node.js', icon: 'ⓙⓢ' },
+                { value: 'java', label: 'Java/Spring', icon: '☕' },
+                { value: 'cpp', label: 'C++/C', icon: '©️' },
+                { value: 'mobile', label: 'Mobile (Android/iOS)', icon: '📱' },
+                { value: 'database', label: 'Database (SQL/NoSQL)', icon: '🗄️' },
+                { value: 'cloud', label: 'Cloud (AWS/Azure/GCP)', icon: '☁️' },
+                { value: 'no-preference', label: 'No specific preference', icon: '🔄' }
+            ]
+        },
+        {
+            id: 'engineeringDomain',
+            title: '🛠️ Which engineering domain interests you most?',
+            subtitle: 'For specialized engineering project recommendations',
+            type: 'single-choice',
+            options: [
+                { value: 'software', label: 'Software Engineering', icon: '💻' },
+                { value: 'embedded', label: 'Embedded Systems', icon: '🔌' },
+                { value: 'mechanical-design', label: 'Mechanical Design', icon: '⚙️' },
+                { value: 'electrical', label: 'Electrical Systems', icon: '⚡' },
+                { value: 'robotics', label: 'Robotics & Control', icon: '🤖' },
+                { value: 'civil-structural', label: 'Civil/Structural', icon: '🏗️' },
+                { value: 'environmental', label: 'Environmental Engineering', icon: '🌱' },
+                { value: 'interdisciplinary', label: 'Interdisciplinary', icon: '🔄' }
+            ]
+        },
+        {
+            id: 'projectComplexity',
+            title: '🧩 What level of project complexity are you looking for?',
+            subtitle: 'Be realistic about your time and skill constraints',
+            type: 'single-choice',
+            options: [
+                { value: 'basic', label: 'Basic (Core concepts)', description: 'Fundamental implementation', icon: '🔤' },
+                { value: 'intermediate', label: 'Intermediate (Multiple components)', description: 'Moderate complexity', icon: '🔄' },
+                { value: 'advanced', label: 'Advanced (System integration)', description: 'Complex architecture', icon: '🔥' },
+                { value: 'research', label: 'Research-level (Novel approaches)', description: 'Pushing boundaries', icon: '🔬' }
+            ]
+        },
+        {
+            id: 'priorExperience',
+            title: '💼 What\'s your prior project experience?',
+            subtitle: 'This helps us gauge your familiarity with project development',
+            type: 'single-choice',
+            options: [
+                { value: 'none', label: 'No Prior Projects', description: 'First-time project developer', icon: '🌟' },
+                { value: 'classroom', label: 'Classroom Projects Only', description: 'Academic assignments', icon: '🎓' },
+                { value: 'personal', label: 'Personal Projects', description: 'Self-initiated work', icon: '💻' },
+                { value: 'internship', label: 'Internship/Industry Experience', description: 'Professional exposure', icon: '🏢' }
+            ]
+        },
+        {
+            id: 'industryFocus',
+            title: '🏭 Which industry sector interests you most?',
+            subtitle: 'For domain-specific project recommendations',
+            type: 'single-choice',
+            options: [
+                { value: 'healthcare', label: 'Healthcare & Medical', icon: '🏥' },
+                { value: 'education', label: 'Education & E-Learning', icon: '🎓' },
+                { value: 'finance', label: 'Finance & Fintech', icon: '💰' },
+                { value: 'retail', label: 'Retail & E-Commerce', icon: '🛍️' },
+                { value: 'manufacturing', label: 'Manufacturing & Industry', icon: '🏭' },
+                { value: 'entertainment', label: 'Entertainment & Media', icon: '🎬' },
+                { value: 'agriculture', label: 'Agriculture & Sustainability', icon: '🌾' },
+                { value: 'government', label: 'Government & Public Sector', icon: '🏢' }
             ]
         }
     ];
