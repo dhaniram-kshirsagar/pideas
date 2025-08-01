@@ -2065,16 +2065,30 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                 <ParticleSystem />
             </div>
             
-            {/* Header */}
-            <div className="relative z-10 bg-black border-b border-gray-800/60 p-4 lg:p-5">
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl lg:text-3xl font-bold text-white mb-1">Your Personalized Project Idea</h1>
-                        <p className="text-sm text-gray-500">
-                            Select sections from the sidebar to view and modify your project idea
-                        </p>
+            {/* Header - Matching AppScreen style */}
+            <header className="bg-black/50 backdrop-blur-sm border-b border-gray-800 p-4 relative z-10">
+                <div className="max-w-6xl mx-auto flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                        <h1 className="text-2xl font-bold text-white">Pideas</h1>
+                        <span className="text-gray-400">|</span>
+                        <span className="text-gray-300">Your Personalized Project Idea</span>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4">
+                        <IconButton
+                            iconType="history"
+                            tooltip="History"
+                            onClick={() => window.location.reload()} // Navigate back to main page
+                            variant="default"
+                        />
+                        {user && user.role === 'admin' && (
+                            <IconButton
+                                iconType="admin"
+                                tooltip="Admin Console"
+                                onClick={() => window.location.reload()} // Navigate back to main page
+                                variant="admin"
+                            />
+                        )}
+                        
                         {modificationHistory.length > 0 && (
                             <IconButton
                                 iconType="reset"
@@ -2091,9 +2105,26 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                             variant="primary"
                             className="bg-black border border-gray-800 hover:bg-gray-900 text-gray-300 hover:text-white"
                         />
+                        
+                        {/* User profile section */}
+                        <div className="relative flex items-center">
+                            <UserProfileIcon onClick={() => {}} />
+                        </div>
+                        
+                        <IconButton
+                            iconType="logout"
+                            tooltip="Logout"
+                            onClick={() => {
+                                if (typeof firebase !== 'undefined') {
+                                    firebase.auth().signOut();
+                                }
+                                window.location.reload();
+                            }}
+                            variant="default"
+                        />
                     </div>
                 </div>
-            </div>
+            </header>
 
             {/* Main Content */}
             <div className="relative z-10 flex-1 flex overflow-hidden">
