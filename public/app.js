@@ -89,9 +89,67 @@ styleSheet.textContent = `
 `;
 document.head.appendChild(styleSheet);
 
+// SVG Icon Components
+const HistoryIcon = ({ size = 20, className = "" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12,6 12,12 16,14"/>
+    </svg>
+);
+
+const AdminIcon = ({ size = 20, className = "" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+);
+
+const LogoutIcon = ({ size = 20, className = "" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16,17 21,12 16,7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+    </svg>
+);
+
+const IdeaIcon = ({ size = 20, className = "" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M9 12l2 2 4-4"/>
+        <path d="M21 12c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"/>
+        <path d="M3 12c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"/>
+        <path d="M12 21c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"/>
+        <path d="M12 3c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"/>
+        <circle cx="12" cy="12" r="7"/>
+        <path d="M12 8v8"/>
+        <path d="M8 12h8"/>
+    </svg>
+);
+
+const EditIcon = ({ size = 20, className = "" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+);
+
+const ResetIcon = ({ size = 20, className = "" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <polyline points="23,4 23,10 17,10"/>
+        <polyline points="1,20 1,14 7,14"/>
+        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+    </svg>
+);
+
+const CloseIcon = ({ size = 20, className = "" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+);
+
 // IconButton Component - Reusable button with icon and tooltip
 const IconButton = ({ 
-    icon, 
+    iconType,
     tooltip, 
     onClick, 
     className = "", 
@@ -108,13 +166,26 @@ const IconButton = ({
     
     const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer";
     
+    const getIcon = () => {
+        switch(iconType) {
+            case 'history': return <HistoryIcon size={20} />;
+            case 'admin': return <AdminIcon size={20} />;
+            case 'logout': return <LogoutIcon size={20} />;
+            case 'idea': return <IdeaIcon size={20} />;
+            case 'edit': return <EditIcon size={20} />;
+            case 'reset': return <ResetIcon size={20} />;
+            case 'close': return <CloseIcon size={20} />;
+            default: return <div className="w-5 h-5" />;
+        }
+    };
+    
     return (
         <button
             onClick={disabled ? undefined : onClick}
             className={`${baseClasses} ${variantClasses[variant]} ${disabledClasses} ${className}`}
             disabled={disabled}
         >
-            <span className="text-lg">{icon}</span>
+            {getIcon()}
             <span className="tooltip-text">{tooltip}</span>
         </button>
     );
@@ -1550,7 +1621,7 @@ const SectionEditor = ({ section, onModify, isLoading }) => {
                     <h2 className="text-xl font-semibold text-white">{section.title}</h2>
                 </div>
                 <IconButton
-                    icon={showEditor ? "❌" : "✏️"}
+                    iconType={showEditor ? "close" : "edit"}
                     tooltip={isLoading ? 'Modifying...' : showEditor ? 'Cancel Edit' : 'Modify Section'}
                     onClick={() => setShowEditor(!showEditor)}
                     disabled={isLoading}
@@ -1872,7 +1943,7 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                     <div className="flex items-center gap-3">
                         {modificationHistory.length > 0 && (
                             <IconButton
-                                icon="🔄"
+                                iconType="reset"
                                 tooltip="Reset to Original"
                                 onClick={handleResetToOriginal}
                                 variant="default"
@@ -1880,7 +1951,7 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                             />
                         )}
                         <IconButton
-                            icon="💡"
+                            iconType="idea"
                             tooltip="Generate New Idea"
                             onClick={onStartNew}
                             variant="primary"
@@ -2593,14 +2664,14 @@ const AppScreen = ({ user, onLogout }) => {
                     </div>
                     <div className="flex items-center gap-4">
                         <IconButton
-                            icon="🕒"
+                            iconType="history"
                             tooltip="History"
                             onClick={() => setCurrentView('history')}
                             variant="default"
                         />
                         {userRole?.isAdmin && (
                             <IconButton
-                                icon="⚙️"
+                                iconType="admin"
                                 tooltip="Admin Console"
                                 onClick={() => setCurrentView('admin')}
                                 variant="admin"
@@ -2642,7 +2713,7 @@ const AppScreen = ({ user, onLogout }) => {
                         </div>
                         
                         <IconButton
-                            icon="🚪"
+                            iconType="logout"
                             tooltip="Logout"
                             onClick={onLogout}
                             variant="default"
