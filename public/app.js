@@ -1398,31 +1398,30 @@ const CollapsibleSection = ({ title, content, isExpanded, onToggle, icon, isSpec
 // Sidebar Navigation Component
 const SidebarNavigation = ({ sections, selectedSection, onSectionSelect, isModifying }) => {
     return (
-        <div className="w-80 bg-gray-900/80 border-r border-gray-700/50 h-full flex flex-col">
-            <div className="p-4 border-b border-gray-700/50 shrink-0">
+        <div className="w-64 bg-black border-r border-gray-800/60 h-full flex flex-col">
+            <div className="p-4 border-b border-gray-800/60 shrink-0">
                 <h3 className="text-lg font-semibold text-white mb-1">Project Sections</h3>
-                <p className="text-xs text-gray-400">Select a section to view or modify</p>
+                <p className="text-xs text-gray-500">Select a section to view or modify</p>
             </div>
             
-            {/* Fixed height container to show only 5-7 sections with scrolling */}
-            <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent p-3 space-y-1" style={{ maxHeight: '420px' }}>
-                {sections.map((section) => (
+            {/* Scrollable sections container */}
+            <div className="overflow-y-auto flex-1 p-3 space-y-1.5 custom-scrollbar">
+                {sections.filter(section => section.content.trim()).map((section) => (
                     <button
                         key={section.id}
                         onClick={() => onSectionSelect(section.id)}
                         className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${
                             selectedSection === section.id
-                                ? 'bg-gray-800/80 border border-gray-600/60 text-white'
-                                : 'bg-gray-900/60 border border-gray-800/40 text-gray-300 hover:bg-gray-800/80 hover:text-white'
+                                ? 'bg-gray-900 border border-gray-700 text-white shadow-lg'
+                                : 'bg-black/80 border border-gray-800/60 text-gray-300 hover:bg-gray-900/60 hover:text-white'
                         }`}
-                        style={{ minHeight: '60px' }}
                     >
-                        <div className="flex items-center gap-2">
-                            <span className="text-base">{section.icon}</span>
+                        <div className="flex items-center gap-2.5">
+                            <span className="text-base opacity-80">{section.icon}</span>
                             <div className="flex-1 truncate">
                                 <div className="font-medium text-sm truncate">{section.title}</div>
-                                <div className="text-xs text-gray-400">
-                                    {section.content.split('\n').length} lines
+                                <div className="text-xs text-gray-500 mt-0.5">
+                                    {Math.min(section.content.split('\n').length, 99)}+ lines
                                 </div>
                             </div>
                             {isModifying && selectedSection === section.id && (
@@ -1433,14 +1432,12 @@ const SidebarNavigation = ({ sections, selectedSection, onSectionSelect, isModif
                 ))}
             </div>
             
-            {/* Show scroll indicator if there are more than 7 sections */}
-            {sections.length > 7 && (
-                <div className="p-2 border-t border-gray-700/50 text-center">
-                    <p className="text-xs text-gray-500">
-                        Scroll to see all {sections.length} sections
-                    </p>
-                </div>
-            )}
+            {/* Footer with subtle branding */}
+            <div className="p-3 border-t border-gray-800/60 text-center">
+                <p className="text-xs text-gray-600">
+                    Project Idea Generator
+                </p>
+            </div>
         </div>
     );
 };
@@ -1509,23 +1506,23 @@ const ChatModificationInterface = ({ onModifyIdea, isLoading, user }) => {
     return (
         <div className="relative">
             {/* Header bar - always visible */}
-            <div className="flex items-center justify-between bg-black/80 border-b border-gray-800/60 px-4 py-2 rounded-t-lg">
+            <div className="flex items-center justify-between bg-black border-b border-gray-800/60 px-3 py-2">
                 <div className="flex items-center gap-2">
-                    <span className="text-gray-300 text-lg">💬</span>
-                    <h3 className="font-medium text-white">Modify Entire Idea</h3>
+                    <span className="text-gray-500 text-lg">💬</span>
+                    <h3 className="font-medium text-gray-300 text-sm">Modify Entire Idea</h3>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                     {chatHistory.length > 0 && (
                         <button
                             onClick={() => setIsExpanded(!isExpanded)}
-                            className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-800/70"
+                            className="text-xs text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-900"
                         >
                             {isExpanded ? 'Hide History' : 'Show History'} ({chatHistory.length})
                         </button>
                     )}
                     <button 
                         onClick={toggleMinimize}
-                        className="text-gray-400 hover:text-white transition-colors p-1 rounded hover:bg-gray-800/70"
+                        className="text-gray-500 hover:text-gray-300 transition-colors p-1 rounded hover:bg-gray-900"
                     >
                         {isMinimized ? '▲' : '▼'}
                     </button>
@@ -1534,23 +1531,23 @@ const ChatModificationInterface = ({ onModifyIdea, isLoading, user }) => {
 
             {/* Collapsible content */}
             {!isMinimized && (
-                <div className="space-y-3 px-4 py-3">
+                <div className="space-y-2 px-3 py-2">
                     {/* Chat History (expandable) */}
                     {isExpanded && chatHistory.length > 0 && (
-                        <div className="bg-black/50 rounded-lg p-3 max-h-48 overflow-y-auto space-y-2 border border-gray-800/40">
+                        <div className="bg-black rounded-lg p-2 max-h-40 overflow-y-auto space-y-2 border border-gray-800/60">
                             {chatHistory.map((message) => (
                                 <div key={message.id} className={`flex gap-2 ${
                                     message.type === 'user' ? 'justify-end' : 'justify-start'
                                 }`}>
-                                    <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg text-sm ${
+                                    <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg text-xs ${
                                         message.type === 'user' 
-                                            ? 'bg-gray-700 text-white' 
+                                            ? 'bg-gray-900 border border-gray-800 text-gray-300' 
                                             : message.type === 'error'
-                                            ? 'bg-red-600/80 text-white'
-                                            : 'bg-gray-900 text-gray-100'
+                                            ? 'bg-black border border-red-900/50 text-red-400'
+                                            : 'bg-black border border-gray-800 text-gray-400'
                                     }`}>
                                         <p>{message.content}</p>
-                                        <p className="text-xs opacity-70 mt-1">
+                                        <p className="text-xs opacity-60 mt-1 text-gray-600">
                                             {new Date(message.timestamp).toLocaleTimeString()}
                                         </p>
                                     </div>
@@ -1568,28 +1565,28 @@ const ChatModificationInterface = ({ onModifyIdea, isLoading, user }) => {
                                 onChange={(e) => setChatInput(e.target.value)}
                                 onKeyPress={handleKeyPress}
                                 placeholder="How would you like to modify the idea? (Press Enter to send)"
-                                className="w-full bg-gray-900/70 border border-gray-800/50 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-600/70 focus:border-gray-600/70 resize-none text-sm"
-                                rows={2}
+                                className="w-full bg-black border border-gray-800/60 rounded-lg px-3 py-2 text-gray-300 placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-700 focus:border-gray-700 resize-none text-xs"
+                                rows={1}
                                 disabled={isLoading || !user}
                             />
                             {!user && (
-                                <p className="text-xs text-gray-500 mt-1">Please log in to modify ideas</p>
+                                <p className="text-xs text-gray-600 mt-1">Please log in to modify ideas</p>
                             )}
                         </div>
                         <button
                             onClick={handleSendMessage}
                             disabled={!chatInput.trim() || isLoading || !user}
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center gap-1 self-end h-10 border border-gray-700/50"
+                            className="px-3 py-1 bg-black hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed text-gray-400 hover:text-gray-300 rounded-lg transition-colors flex items-center gap-1 self-end h-8 border border-gray-800/60"
                         >
                             {isLoading ? (
                                 <>
-                                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                    <span className="text-sm">Working...</span>
+                                    <div className="w-2 h-2 border-2 border-gray-600 border-t-gray-400 rounded-full animate-spin"></div>
+                                    <span className="text-xs">Working...</span>
                                 </>
                             ) : (
                                 <>
-                                    <span className="text-sm">Send</span>
-                                    <span className="text-xs opacity-70">↵</span>
+                                    <span className="text-xs">Send</span>
+                                    <span className="text-xs opacity-60">↵</span>
                                 </>
                             )}
                         </button>
@@ -1602,72 +1599,77 @@ const ChatModificationInterface = ({ onModifyIdea, isLoading, user }) => {
 
 // Section Editor Component
 const SectionEditor = ({ section, onModify, isLoading }) => {
-    const [editPrompt, setEditPrompt] = useState('');
-    const [showEditor, setShowEditor] = useState(false);
-
+    const [modifyPrompt, setModifyPrompt] = useState('');
+    const [isExpanded, setIsExpanded] = useState(false);
+    
     const handleModify = () => {
-        if (editPrompt.trim()) {
-            onModify(section.id, editPrompt.trim());
-            setEditPrompt('');
-            setShowEditor(false);
+        if (modifyPrompt.trim() && !isLoading) {
+            onModify(section.id, modifyPrompt);
+            setModifyPrompt('');
         }
     };
-
+    
+    // Render markdown content
+    const renderedContent = marked.parse(section.content);
+    
     return (
-        <div className="flex-1 p-6">
-            <div className="flex items-center justify-between mb-6">
+        <div className="max-w-4xl mx-auto p-6">
+            {/* Section Header */}
+            <div className="flex items-center justify-between border-b border-gray-800/60 pb-3 mb-5">
                 <div className="flex items-center gap-3">
-                    <span className="text-2xl">{section.icon}</span>
-                    <h2 className="text-xl font-semibold text-white">{section.title}</h2>
+                    <div className="text-xl text-gray-400">{section.icon}</div>
+                    <h2 className="text-xl font-bold text-gray-200">{section.title}</h2>
                 </div>
-                <IconButton
-                    iconType={showEditor ? "close" : "edit"}
-                    tooltip={isLoading ? 'Modifying...' : showEditor ? 'Cancel Edit' : 'Modify Section'}
-                    onClick={() => setShowEditor(!showEditor)}
-                    disabled={isLoading}
-                    variant={showEditor ? "default" : "primary"}
-                    className={showEditor ? "text-red-400 hover:text-red-300" : ""}
-                />
-            </div>
-
-            {/* Section Content */}
-            <div className="bg-gray-800/40 rounded-lg p-6 border border-gray-700/30 mb-6">
-                <div className="text-gray-200 whitespace-pre-wrap leading-relaxed text-sm">
-                    {section.content}
+                <div>
+                    <IconButton
+                        iconType="edit"
+                        tooltip="Modify Section"
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        variant={isExpanded ? 'primary' : 'default'}
+                        className={isExpanded 
+                            ? 'bg-black border border-gray-700 text-gray-300' 
+                            : 'bg-black border border-gray-800/60 text-gray-500 hover:text-gray-300'}
+                    />
                 </div>
             </div>
-
-            {/* Modification Interface */}
-            {showEditor && (
-                <div className="bg-gray-900/60 rounded-lg p-6 border border-blue-500/20">
-                    <h3 className="text-lg font-medium text-white mb-4">Modify This Section</h3>
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Describe your changes:
-                            </label>
-                            <textarea
-                                value={editPrompt}
-                                onChange={(e) => setEditPrompt(e.target.value)}
-                                placeholder="e.g., 'Make this more beginner-friendly', 'Add more technical details', 'Focus on mobile development'..."
-                                className="w-full h-32 bg-gray-800/60 border border-gray-600/50 rounded-lg p-4 text-white placeholder-gray-400 focus:border-blue-500/50 focus:outline-none resize-none"
-                                disabled={isLoading}
-                            />
-                        </div>
-                        <div className="flex gap-3">
+            
+            {/* Section Content - Rendered Markdown */}
+            <div className="prose prose-invert prose-sm max-w-none mb-6 text-gray-300">
+                <div dangerouslySetInnerHTML={{ __html: renderedContent }} />
+            </div>
+            
+            {/* Modification Interface (expandable) */}
+            {isExpanded && (
+                <div className="bg-black border border-gray-800/60 rounded-lg p-4 mb-6">
+                    <h3 className="text-sm font-medium text-gray-300 mb-3">Modify this section</h3>
+                    <div className="space-y-3">
+                        <textarea
+                            value={modifyPrompt}
+                            onChange={(e) => setModifyPrompt(e.target.value)}
+                            placeholder={`How would you like to modify the ${section.title} section?`}
+                            className="w-full bg-black border border-gray-800/60 rounded-lg px-3 py-2 text-gray-300 placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-700 focus:border-gray-700 resize-none text-sm"
+                            rows={3}
+                            disabled={isLoading}
+                        />
+                        <div className="flex justify-end">
                             <button
                                 onClick={handleModify}
-                                disabled={!editPrompt.trim() || isLoading}
-                                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                                disabled={!modifyPrompt.trim() || isLoading}
+                                className="px-3 py-1.5 bg-black hover:bg-gray-900 border border-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-gray-400 hover:text-gray-300 rounded-lg transition-colors flex items-center gap-2 text-sm"
                             >
-                                {isLoading ? 'Regenerating...' : 'Regenerate Section'}
-                            </button>
-                            <button
-                                onClick={() => setShowEditor(false)}
-                                disabled={isLoading}
-                                className="bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-                            >
-                                Cancel
+                                {isLoading ? (
+                                    <>
+                                        <div className="w-3 h-3 border-2 border-gray-600 border-t-gray-400 rounded-full animate-spin"></div>
+                                        <span>Modifying...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>Apply Changes</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                        </svg>
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>
@@ -1937,22 +1939,22 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
             </div>
             
             {/* Header */}
-            <div className="relative z-10 bg-black/90 backdrop-blur-sm border-b border-gray-800/60 p-6">
+            <div className="relative z-10 bg-black border-b border-gray-800/60 p-4 lg:p-5">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold text-white mb-2">Your Personalized Project Idea</h1>
-                        <p className="text-gray-400">
+                        <h1 className="text-2xl lg:text-3xl font-bold text-white mb-1">Your Personalized Project Idea</h1>
+                        <p className="text-sm text-gray-500">
                             Select sections from the sidebar to view and modify your project idea
                         </p>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                         {modificationHistory.length > 0 && (
                             <IconButton
                                 iconType="reset"
                                 tooltip="Reset to Original"
                                 onClick={handleResetToOriginal}
                                 variant="default"
-                                className="text-gray-300 hover:text-white bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50"
+                                className="text-gray-400 hover:text-white bg-black hover:bg-gray-900 border border-gray-800/60"
                             />
                         )}
                         <IconButton
@@ -1960,7 +1962,7 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                             tooltip="Generate New Idea"
                             onClick={onStartNew}
                             variant="primary"
-                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg"
+                            className="bg-black border border-gray-800 hover:bg-gray-900 text-gray-300 hover:text-white"
                         />
                     </div>
                 </div>
@@ -1969,7 +1971,7 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
             {/* Main Content */}
             <div className="relative z-10 flex-1 flex overflow-hidden">
                 {/* Sidebar - Fixed width with dark theme */}
-                <div className="w-64 bg-black border-r border-gray-800/60 flex-shrink-0 overflow-y-auto">
+                <div className="w-64 bg-black border-r border-gray-800/60 flex-shrink-0">
                     <SidebarNavigation 
                         sections={sections}
                         selectedSection={selectedSection}
@@ -1979,9 +1981,9 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                 </div>
 
                 {/* Main Content Area with Chat */}
-                <div className="flex-1 flex flex-col bg-black/20 backdrop-blur-sm">
+                <div className="flex-1 flex flex-col bg-black">
                     {/* Content Display Area */}
-                    <div className="flex-1 overflow-y-auto p-6">
+                    <div className="flex-1 overflow-y-auto">
                         {selectedSectionData ? (
                             <div>
                                 <SectionEditor 
@@ -1993,11 +1995,11 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                         ) : (
                             <div className="flex items-center justify-center h-full">
                                 <div className="text-center">
-                                    <div className="w-20 h-20 mx-auto mb-5 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center border border-gray-800/60">
+                                    <div className="w-20 h-20 mx-auto mb-5 bg-black rounded-full flex items-center justify-center border border-gray-800/60">
                                         <div className="text-3xl opacity-60">📋</div>
                                     </div>
                                     <h3 className="text-xl font-bold text-white mb-2">Select a Section</h3>
-                                    <p className="text-gray-400 max-w-md">Choose a section from the sidebar to view and modify</p>
+                                    <p className="text-gray-500 max-w-md">Choose a section from the sidebar to view and modify</p>
                                 </div>
                             </div>
                         )}
@@ -2005,7 +2007,7 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
 
                     {/* Compact Chat Interface at Bottom */}
                     <div className="border-t border-gray-800/60 bg-black">
-                        <div className="p-3">
+                        <div className="px-3 py-2">
                             <ChatModificationInterface 
                                 onModifyIdea={handleOverallIdeaModify}
                                 isLoading={isModifying}
@@ -2018,18 +2020,18 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
 
             {/* Modification History Panel (if any modifications) */}
             {modificationHistory.length > 0 && (
-                <div className="bg-gray-900/60 border-t border-gray-700/50 p-4">
+                <div className="bg-black border-t border-gray-800/60 p-3">
                     <div className="max-w-7xl mx-auto">
-                        <div className="flex items-center gap-2 mb-3">
-                            <span className="text-sm font-medium text-gray-300">Modification History:</span>
-                            <span className="text-xs text-gray-400">({modificationHistory.length} changes)</span>
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="text-sm font-medium text-gray-400">Modification History:</span>
+                            <span className="text-xs text-gray-500">({modificationHistory.length} changes)</span>
                         </div>
-                        <div className="flex gap-2 overflow-x-auto pb-2">
+                        <div className="flex gap-2 overflow-x-auto pb-1">
                             {modificationHistory.map((mod) => (
-                                <div key={mod.id} className="flex-shrink-0 bg-gray-800/60 rounded-lg p-3 border border-gray-700/40 min-w-64">
-                                    <div className="text-xs font-medium text-blue-400">{mod.sectionTitle}</div>
-                                    <div className="text-xs text-gray-400 mt-1 line-clamp-2">{mod.prompt}</div>
-                                    <div className="text-xs text-gray-500 mt-2">
+                                <div key={mod.id} className="flex-shrink-0 bg-black rounded-lg p-3 border border-gray-800/60 min-w-64">
+                                    <div className="text-xs font-medium text-gray-400">{mod.sectionTitle}</div>
+                                    <div className="text-xs text-gray-500 mt-1 line-clamp-2">{mod.prompt}</div>
+                                    <div className="text-xs text-gray-600 mt-2">
                                         {new Date(mod.timestamp).toLocaleTimeString()}
                                     </div>
                                 </div>
