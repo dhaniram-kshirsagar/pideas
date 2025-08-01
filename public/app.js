@@ -809,9 +809,9 @@ const DiscoveryStep = ({ step, onComplete, stepNumber, totalSteps, isTransitioni
     ];
     
     return (
-        <div className="max-w-2xl mx-auto text-center">
+        <div className="max-w-2xl mx-auto">
             {showEncouragement ? (
-                <div className="animate-pulse">
+                <div className="text-center animate-pulse">
                     <div className="text-4xl mb-4">🎉</div>
                     <h2 className="text-2xl font-bold text-white mb-2">
                         {encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)]}
@@ -820,91 +820,122 @@ const DiscoveryStep = ({ step, onComplete, stepNumber, totalSteps, isTransitioni
                 </div>
             ) : (
                 <>
-                    <h2 className="text-3xl font-bold text-white mb-4">{step.title}</h2>
-                    <p className="text-gray-300 mb-8 text-lg">{step.subtitle}</p>
-                    
-                    {step.type === 'single-choice' && (
-                        <div className="grid gap-4 max-w-lg mx-auto">
-                            {step.options.map((option) => (
-                                <button
-                                    key={option.value}
-                                    onClick={() => handleSingleChoice(option.value)}
-                                    className="bg-gray-900/60 border border-gray-800/60 rounded-lg p-4 hover:bg-gray-800/80 hover:border-gray-700/80 transition-all duration-200 text-left"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-2xl">{option.icon}</span>
-                                        <div>
-                                            <div className="text-white font-medium">{option.label}</div>
-                                            {option.description && (
-                                                <div className="text-gray-400 text-sm">{option.description}</div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </button>
-                            ))}
+                    {/* Progress Header - Matching GameStep style */}
+                    <div className="mb-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <span className="text-blue-400 font-medium">Step {stepNumber} of {totalSteps}</span>
                         </div>
-                    )}
-                    
-                    {step.type === 'multi-choice' && (
-                        <>
-                            <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto mb-6">
+                        <div className="w-full bg-gray-700 rounded-full h-2">
+                            <div 
+                                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${(stepNumber / totalSteps) * 100}%` }}
+                            ></div>
+                        </div>
+                    </div>
+
+                    {/* Question Card - Matching GameStep style */}
+                    <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+                        <h3 className="text-xl font-semibold text-white mb-6">{step.title}</h3>
+                        <p className="text-gray-300 mb-6">{step.subtitle}</p>
+                        
+                        {/* Single Choice Options */}
+                        {step.type === 'single-choice' && (
+                            <div className="space-y-3">
                                 {step.options.map((option) => (
                                     <button
                                         key={option.value}
-                                        onClick={() => handleMultiChoice(option.value)}
-                                        className={`bg-gray-900/60 border rounded-lg p-4 hover:bg-gray-800/80 transition-all duration-200 ${
-                                            selectedValues.includes(option.value)
-                                                ? 'border-gray-600/80 bg-gray-800/80'
-                                                : 'border-gray-800/60'
+                                        onClick={() => handleSingleChoice(option.value)}
+                                        className={`w-full text-left p-4 rounded-lg border transition-all duration-200 ${
+                                            selectedValue === option.value
+                                                ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                                                : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500 hover:bg-gray-700'
                                         }`}
+                                        disabled={showEncouragement}
                                     >
-                                        <div className="text-center">
-                                            <span className="text-2xl block mb-2">{option.icon}</span>
-                                            <div className="text-white font-medium text-sm">{option.label}</div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-2xl">{option.icon}</span>
+                                            <div>
+                                                <div className="font-medium">{option.label}</div>
+                                                {option.description && (
+                                                    <div className="text-gray-400 text-sm">{option.description}</div>
+                                                )}
+                                            </div>
                                         </div>
                                     </button>
                                 ))}
                             </div>
-                            <button
-                                onClick={handleMultiChoiceSubmit}
-                                disabled={selectedValues.length === 0}
-                                className="bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors border border-gray-700/50"
-                            >
-                                Continue ({selectedValues.length} selected)
-                            </button>
-                        </>
-                    )}
-                    
-                    {step.type === 'resource-form' && (
-                        <>
-                            <div className="space-y-6 max-w-md mx-auto mb-6">
-                                {step.fields.map((field) => (
-                                    <div key={field.name} className="text-left">
-                                        <label className="block text-white font-medium mb-2">{field.label}</label>
-                                        <select
-                                            value={formData[field.name] || ''}
-                                            onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
-                                            className="w-full bg-gray-900/70 border border-gray-800/60 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-gray-600/70 focus:border-gray-600/70"
+                        )}
+                        
+                        {/* Multi Choice Options */}
+                        {step.type === 'multi-choice' && (
+                            <>
+                                <div className="space-y-3">
+                                    {step.options.map((option) => (
+                                        <button
+                                            key={option.value}
+                                            onClick={() => handleMultiChoice(option.value)}
+                                            className={`w-full text-left p-4 rounded-lg border transition-all duration-200 ${
+                                                selectedValues.includes(option.value)
+                                                    ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                                                    : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500 hover:bg-gray-700'
+                                            }`}
+                                            disabled={showEncouragement}
                                         >
-                                            <option value="">Select {field.label.toLowerCase()}...</option>
-                                            {field.options.map((option) => (
-                                                <option key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                ))}
-                            </div>
-                            <button
-                                onClick={handleFormSubmit}
-                                disabled={Object.keys(formData).length !== step.fields.length}
-                                className="bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors border border-gray-700/50"
-                            >
-                                Continue
-                            </button>
-                        </>
-                    )}
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-2xl">{option.icon}</span>
+                                                <div className="font-medium">{option.label}</div>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                                <button
+                                    onClick={handleMultiChoiceSubmit}
+                                    disabled={selectedValues.length === 0 || showEncouragement}
+                                    className="w-full mt-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors duration-200"
+                                >
+                                    {showEncouragement ? 'Moving to next step...' : `Continue (${selectedValues.length} selected)`}
+                                </button>
+                            </>
+                        )}
+                        
+                        {/* Resource Form */}
+                        {step.type === 'resource-form' && (
+                            <>
+                                <div className="space-y-4 mb-6">
+                                    {step.fields.map((field) => (
+                                        <div key={field.name}>
+                                            <label className="block text-white font-medium mb-2">{field.label}</label>
+                                            <select
+                                                value={formData[field.name] || ''}
+                                                onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
+                                                className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                disabled={showEncouragement}
+                                            >
+                                                <option value="">Select {field.label.toLowerCase()}...</option>
+                                                {field.options.map((option) => (
+                                                    <option key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    ))}
+                                </div>
+                                <button
+                                    onClick={handleFormSubmit}
+                                    disabled={Object.keys(formData).length !== step.fields.length || showEncouragement}
+                                    className="w-full mt-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors duration-200"
+                                >
+                                    {showEncouragement ? 'Moving to next step...' : 'Continue'}
+                                </button>
+                            </>
+                        )}
+                        
+                        {/* Debug info */}
+                        <div className="mt-2 text-xs text-gray-500 text-center">
+                            Debug: Selected="{selectedValue || selectedValues.join(', ')}", ShowEncouragement={showEncouragement.toString()}, HasCompleted={hasCompleted.toString()}
+                        </div>
+                    </div>
                 </>
             )}
         </div>
