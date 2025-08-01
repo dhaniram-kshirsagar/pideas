@@ -999,20 +999,29 @@ const PersonalizedIdeaSelection = ({ userProfile, onIdeaSelect, onBackToDiscover
     };
     
     const createPersonalizedPrompt = (profile, regenerate = false) => {
-        // Ensure we have valid profile data
-        const fieldOfStudy = profile.fieldOfStudy || 'Computer Science';
-        const skillLevel = profile.skillLevel || 'intermediate';
+        // Extract all profile data with fallbacks
+        const stream = profile.stream || 'Computer Science';
+        const year = profile.year || '2nd-year';
         const interests = Array.isArray(profile.interests) ? profile.interests : [];
-        const timeAvailable = profile.resources?.timeAvailable || '1month';
-        const budget = profile.resources?.budget || 'free';
+        const skillLevel = profile.skillLevel || 'intermediate';
+        const teamSize = profile.teamSize || 'small-team';
+        const projectDuration = profile.projectDuration || 'medium';
+        const budgetRange = profile.budgetRange || 'no-budget';
         const learningGoals = Array.isArray(profile.learningGoals) ? profile.learningGoals : [];
+        const preferredTechnologies = Array.isArray(profile.preferredTechnologies) ? profile.preferredTechnologies : [];
+        const engineeringDomain = profile.engineeringDomain || 'software';
+        const projectComplexity = profile.projectComplexity || 'intermediate';
+        const priorExperience = profile.priorExperience || 'classroom';
+        const industryFocus = profile.industryFocus || 'education';
         
         // Add variety for regeneration
         const varietyPrompts = [
             'Generate 6-8 diverse and creative project ideas',
             'Create 6-8 innovative project concepts',
             'Develop 6-8 unique project suggestions',
-            'Design 6-8 engaging project proposals'
+            'Design 6-8 engaging project proposals',
+            'Craft 6-8 personalized project recommendations',
+            'Build 6-8 tailored project blueprints'
         ];
         
         const focusAreas = [
@@ -1020,7 +1029,10 @@ const PersonalizedIdeaSelection = ({ userProfile, onIdeaSelect, onBackToDiscover
             'practical real-world applications',
             'innovative solutions to common problems',
             'emerging trends and technologies',
-            'interdisciplinary approaches'
+            'interdisciplinary approaches',
+            'industry-specific solutions',
+            'social impact initiatives',
+            'entrepreneurial ventures'
         ];
         
         const basePrompt = regenerate ? 
@@ -1031,15 +1043,22 @@ const PersonalizedIdeaSelection = ({ userProfile, onIdeaSelect, onBackToDiscover
             focusAreas[Math.floor(Math.random() * focusAreas.length)] :
             'practical applications';
         
-        return `${basePrompt} for a ${skillLevel} level student in ${fieldOfStudy}, focusing on ${focusArea}. 
+        return `${basePrompt} for a ${skillLevel} level student in ${stream}, focusing on ${focusArea}. 
         
-        User Profile:
-        - Field of Study: ${fieldOfStudy}
-        - Skill Level: ${skillLevel}
-        - Interests: ${interests.length > 0 ? interests.join(', ') : 'General programming'}
-        - Time Available: ${timeAvailable}
-        - Budget: ${budget}
+        Comprehensive User Profile:
+        - Academic Stream: ${stream}
+        - Academic Year: ${year}
+        - Technical Skill Level: ${skillLevel}
+        - Prior Experience: ${priorExperience}
+        - Project Interests: ${interests.length > 0 ? interests.join(', ') : 'General programming'}
+        - Preferred Technologies: ${preferredTechnologies.length > 0 ? preferredTechnologies.join(', ') : 'Open to any technology'}
+        - Engineering Domain: ${engineeringDomain}
+        - Desired Complexity: ${projectComplexity}
+        - Team Size Preference: ${teamSize}
+        - Project Duration: ${projectDuration}
+        - Budget Range (INR): ${budgetRange}
         - Learning Goals: ${learningGoals.length > 0 ? learningGoals.join(', ') : 'Skill development'}
+        - Industry Focus: ${industryFocus}
         
         ${regenerate ? 'Please provide DIFFERENT and MORE CREATIVE project ideas than typical suggestions. Think outside the box while' : 'Please provide diverse project ideas that'} match the user's profile. For each project idea, provide:
         1. Project Title
