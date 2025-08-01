@@ -3275,15 +3275,30 @@ const App = () => {
                 // Auto-save to history
                 try {
                     const saveIdeaToHistory = firebase.functions().httpsCallable('saveIdeaToHistory');
+                    console.log('Saving discovery idea to history:', {
+                        userId: user.uid,
+                        ideaData: {
+                            query: prompt,
+                            idea: result.data.idea,
+                            studentProfile: profile,
+                            gameScore: 0,
+                            discoveryMode: true
+                        },
+                        gameSteps: []
+                    });
+                    
                     await saveIdeaToHistory({
                         userId: user.uid,
-                        idea: result.data.idea,
-                        context: {
-                            discoveryMode: true,
-                            selectedIdea: idea,
-                            userProfile: profile
-                        }
+                        ideaData: {
+                            query: prompt,
+                            idea: result.data.idea,
+                            studentProfile: profile,
+                            gameScore: 0,
+                            discoveryMode: true
+                        },
+                        gameSteps: []
                     });
+                    console.log('Successfully saved discovery idea to history');
                 } catch (saveError) {
                     console.error('Error saving to history:', saveError);
                 }
