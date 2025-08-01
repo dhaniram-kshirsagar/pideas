@@ -628,9 +628,58 @@ const DiscoveryOnboarding = ({ onComplete, user }) => {
         const step = discoverySteps[currentStep];
         
         if (step.type === 'single-choice') {
-            newProfile[step.id === 'field' ? 'fieldOfStudy' : 'skillLevel'] = stepData.value;
+            // Map each single-choice field to the correct profile property
+            switch(step.id) {
+                case 'stream':
+                    newProfile.stream = stepData.value;
+                    break;
+                case 'year':
+                    newProfile.year = stepData.value;
+                    break;
+                case 'skillLevel':
+                    newProfile.skillLevel = stepData.value;
+                    break;
+                case 'teamSize':
+                    newProfile.teamSize = stepData.value;
+                    break;
+                case 'projectDuration':
+                    newProfile.projectDuration = stepData.value;
+                    break;
+                case 'budgetRange':
+                    newProfile.budgetRange = stepData.value;
+                    break;
+                case 'engineeringDomain':
+                    newProfile.engineeringDomain = stepData.value;
+                    break;
+                case 'projectComplexity':
+                    newProfile.projectComplexity = stepData.value;
+                    break;
+                case 'priorExperience':
+                    newProfile.priorExperience = stepData.value;
+                    break;
+                case 'industryFocus':
+                    newProfile.industryFocus = stepData.value;
+                    break;
+                default:
+                    // For backward compatibility
+                    newProfile[step.id === 'field' ? 'fieldOfStudy' : 'skillLevel'] = stepData.value;
+            }
         } else if (step.type === 'multi-choice') {
-            newProfile[step.id === 'interests' ? 'interests' : 'learningGoals'] = stepData.values;
+            // Map each multi-choice field to the correct profile property
+            switch(step.id) {
+                case 'interests':
+                    newProfile.interests = stepData.values;
+                    break;
+                case 'learningGoals':
+                    newProfile.learningGoals = stepData.values;
+                    break;
+                case 'preferredTechnologies':
+                    newProfile.preferredTechnologies = stepData.values;
+                    break;
+                default:
+                    // For backward compatibility
+                    newProfile[step.id === 'interests' ? 'interests' : 'learningGoals'] = stepData.values;
+            }
         } else if (step.type === 'resource-form') {
             newProfile.resources = { ...newProfile.resources, ...stepData };
         }
@@ -3179,13 +3228,20 @@ const App = () => {
             // Generate full project documentation for the selected idea
             const prompt = `Generate a comprehensive project plan for: "${idea.title}"
             
-            Based on user profile:
-            - Field: ${profile.fieldOfStudy}
-            - Skill Level: ${profile.skillLevel}
-            - Interests: ${profile.interests.join(', ')}
-            - Time Available: ${profile.resources.timeAvailable}
-            - Budget: ${profile.resources.budget}
-            - Learning Goals: ${profile.learningGoals.join(', ')}
+            Based on comprehensive user profile:
+            - Academic Stream: ${profile.stream || 'Computer Science'}
+            - Academic Year: ${profile.year || '2nd-year'}
+            - Technical Skill Level: ${profile.skillLevel || 'intermediate'}
+            - Prior Experience: ${profile.priorExperience || 'classroom'}
+            - Project Interests: ${Array.isArray(profile.interests) && profile.interests.length > 0 ? profile.interests.join(', ') : 'General programming'}
+            - Preferred Technologies: ${Array.isArray(profile.preferredTechnologies) && profile.preferredTechnologies.length > 0 ? profile.preferredTechnologies.join(', ') : 'Open to any technology'}
+            - Engineering Domain: ${profile.engineeringDomain || 'software'}
+            - Desired Complexity: ${profile.projectComplexity || 'intermediate'}
+            - Team Size Preference: ${profile.teamSize || 'small-team'}
+            - Project Duration: ${profile.projectDuration || 'medium'}
+            - Budget Range (INR): ${profile.budgetRange || 'no-budget'}
+            - Learning Goals: ${Array.isArray(profile.learningGoals) && profile.learningGoals.length > 0 ? profile.learningGoals.join(', ') : 'Skill development'}
+            - Industry Focus: ${profile.industryFocus || 'education'}
             
             Project Brief: ${idea.description}
             Technologies: ${idea.technologies}
