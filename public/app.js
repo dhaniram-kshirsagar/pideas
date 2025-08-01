@@ -1967,9 +1967,9 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
             </div>
 
             {/* Main Content */}
-            <div className="relative z-10 flex-1 flex max-w-7xl mx-auto w-full">
-                {/* Sidebar */}
-                <div className="w-72 bg-gray-900/95 backdrop-blur-sm border-r border-gray-700/50 flex-shrink-0">
+            <div className="relative z-10 flex-1 flex overflow-hidden">
+                {/* Sidebar - Fixed width with dark theme */}
+                <div className="w-64 bg-black border-r border-gray-800/60 flex-shrink-0 overflow-y-auto">
                     <SidebarNavigation 
                         sections={sections}
                         selectedSection={selectedSection}
@@ -1979,11 +1979,11 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                 </div>
 
                 {/* Main Content Area with Chat */}
-                <div className="flex-1 flex flex-col bg-gray-900/30 backdrop-blur-sm">
+                <div className="flex-1 flex flex-col bg-black/20 backdrop-blur-sm">
                     {/* Content Display Area */}
-                    <div className="flex-1 overflow-y-auto">
+                    <div className="flex-1 overflow-y-auto p-6">
                         {selectedSectionData ? (
-                            <div className="p-8">
+                            <div>
                                 <SectionEditor 
                                     section={selectedSectionData}
                                     onModify={handleSectionModify}
@@ -1991,25 +1991,21 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                                 />
                             </div>
                         ) : (
-                            <div className="flex-1 flex items-center justify-center p-8">
+                            <div className="flex items-center justify-center h-full">
                                 <div className="text-center">
-                                    <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center border border-gray-700/50">
-                                        <div className="text-4xl opacity-60">📋</div>
+                                    <div className="w-20 h-20 mx-auto mb-5 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center border border-gray-800/60">
+                                        <div className="text-3xl opacity-60">📋</div>
                                     </div>
-                                    <h3 className="text-2xl font-bold text-white mb-3">Select a Section</h3>
-                                    <p className="text-gray-400 max-w-md">Choose a section from the sidebar to view and modify your project idea</p>
+                                    <h3 className="text-xl font-bold text-white mb-2">Select a Section</h3>
+                                    <p className="text-gray-400 max-w-md">Choose a section from the sidebar to view and modify</p>
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    {/* Chat Interface at Bottom */}
-                    <div className="border-t border-gray-700/50 bg-gray-900/80 backdrop-blur-sm">
-                        <div className="p-6">
-                            <div className="mb-4">
-                                <h3 className="text-lg font-semibold text-white mb-2">Modify Entire Idea</h3>
-                                <p className="text-sm text-gray-400">Describe how you'd like to modify the overall project idea</p>
-                            </div>
+                    {/* Compact Chat Interface at Bottom */}
+                    <div className="border-t border-gray-800/60 bg-black">
+                        <div className="p-3">
                             <ChatModificationInterface 
                                 onModifyIdea={handleOverallIdeaModify}
                                 isLoading={isModifying}
