@@ -1609,8 +1609,10 @@ const SectionEditor = ({ section, onModify, isLoading }) => {
         }
     };
     
-    // Render markdown content
-    const renderedContent = marked.parse(section.content);
+    // Format content with line breaks instead of using marked library
+    const formattedContent = section.content
+        .split('\n')
+        .map((line, i) => <p key={i} className="mb-2">{line}</p>);
     
     return (
         <div className="max-w-4xl mx-auto p-6">
@@ -1633,9 +1635,9 @@ const SectionEditor = ({ section, onModify, isLoading }) => {
                 </div>
             </div>
             
-            {/* Section Content - Rendered Markdown */}
-            <div className="prose prose-invert prose-sm max-w-none mb-6 text-gray-300">
-                <div dangerouslySetInnerHTML={{ __html: renderedContent }} />
+            {/* Section Content */}
+            <div className="max-w-none mb-6 text-gray-300 whitespace-pre-wrap">
+                {formattedContent}
             </div>
             
             {/* Modification Interface (expandable) */}
