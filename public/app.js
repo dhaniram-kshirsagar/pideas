@@ -1930,24 +1930,29 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
     };
 
     return (
-        <div className="h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-gray-900 flex flex-col">
+        <div className="h-screen bg-black relative overflow-hidden flex flex-col">
+            {/* Background particles effect */}
+            <div className="fixed inset-0 z-0">
+                <ParticleSystem />
+            </div>
+            
             {/* Header */}
-            <div className="bg-gray-900/80 border-b border-gray-700/50 p-6">
+            <div className="relative z-10 bg-black/90 backdrop-blur-sm border-b border-gray-800/60 p-6">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold text-white">Your Personalized Project Idea</h1>
-                        <p className="text-sm text-gray-400 mt-1">
+                        <h1 className="text-3xl font-bold text-white mb-2">Your Personalized Project Idea</h1>
+                        <p className="text-gray-400">
                             Select sections from the sidebar to view and modify your project idea
                         </p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4">
                         {modificationHistory.length > 0 && (
                             <IconButton
                                 iconType="reset"
                                 tooltip="Reset to Original"
                                 onClick={handleResetToOriginal}
                                 variant="default"
-                                className="text-gray-300 hover:text-white"
+                                className="text-gray-300 hover:text-white bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50"
                             />
                         )}
                         <IconButton
@@ -1955,42 +1960,47 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                             tooltip="Generate New Idea"
                             onClick={onStartNew}
                             variant="primary"
+                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg"
                         />
                     </div>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto flex-1 flex flex-col">
+            <div className="relative z-10 flex-1 flex overflow-hidden">
                 <div className="flex flex-1 min-h-0">
                     {/* Sidebar */}
-                    <SidebarNavigation 
-                        sections={sections}
-                        selectedSection={selectedSection}
-                        onSectionSelect={handleSectionSelect}
-                        isModifying={isModifying}
-                    />
+                    <div className="w-80 bg-black/60 backdrop-blur-sm border-r border-gray-800/60">
+                        <SidebarNavigation 
+                            sections={sections}
+                            selectedSection={selectedSection}
+                            onSectionSelect={handleSectionSelect}
+                            isModifying={isModifying}
+                        />
+                    </div>
 
                     {/* Main Content Area */}
                     {selectedSectionData ? (
-                        <SectionEditor 
-                            section={selectedSectionData}
-                            onModify={handleSectionModify}
-                            isLoading={isModifying}
-                        />
+                        <div className="flex-1 bg-black/20 backdrop-blur-sm">
+                            <SectionEditor 
+                                section={selectedSectionData}
+                                onModify={handleSectionModify}
+                                isLoading={isModifying}
+                            />
+                        </div>
                     ) : (
-                        <div className="flex-1 flex items-center justify-center">
+                        <div className="flex-1 flex items-center justify-center bg-black/20 backdrop-blur-sm">
                             <div className="text-center text-gray-400">
-                                <div className="text-6xl mb-4">📋</div>
-                                <h3 className="text-xl font-medium mb-2">Select a Section</h3>
-                                <p className="text-sm">Choose a section from the sidebar to view and modify</p>
+                                <div className="text-6xl mb-4 opacity-50">📋</div>
+                                <h3 className="text-2xl font-bold mb-3 text-white">Select a Section</h3>
+                                <p className="text-gray-400">Choose a section from the sidebar to view and modify</p>
                             </div>
                         </div>
                     )}
                 </div>
                 
                 {/* Fixed Chat Input for Overall Idea Modification - Only covers details area */}
-                <div className="sticky bottom-0 right-0 ml-80 bg-black/90 border-t border-gray-800/60 p-4 shadow-lg z-20">
+                <div className="sticky bottom-0 right-0 ml-80 bg-black/95 backdrop-blur-sm border-t border-gray-800/60 p-6 shadow-2xl z-20">
                     <ChatModificationInterface 
                         onModifyIdea={handleOverallIdeaModify}
                         isLoading={isModifying}
