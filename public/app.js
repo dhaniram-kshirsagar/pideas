@@ -1967,45 +1967,56 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
             </div>
 
             {/* Main Content */}
-            <div className="relative z-10 flex-1 flex overflow-hidden">
-                <div className="flex flex-1 min-h-0">
-                    {/* Sidebar */}
-                    <div className="w-80 bg-black/60 backdrop-blur-sm border-r border-gray-800/60">
-                        <SidebarNavigation 
-                            sections={sections}
-                            selectedSection={selectedSection}
-                            onSectionSelect={handleSectionSelect}
-                            isModifying={isModifying}
-                        />
+            <div className="relative z-10 flex-1 flex max-w-7xl mx-auto w-full">
+                {/* Sidebar */}
+                <div className="w-72 bg-gray-900/95 backdrop-blur-sm border-r border-gray-700/50 flex-shrink-0">
+                    <SidebarNavigation 
+                        sections={sections}
+                        selectedSection={selectedSection}
+                        onSectionSelect={handleSectionSelect}
+                        isModifying={isModifying}
+                    />
+                </div>
+
+                {/* Main Content Area with Chat */}
+                <div className="flex-1 flex flex-col bg-gray-900/30 backdrop-blur-sm">
+                    {/* Content Display Area */}
+                    <div className="flex-1 overflow-y-auto">
+                        {selectedSectionData ? (
+                            <div className="p-8">
+                                <SectionEditor 
+                                    section={selectedSectionData}
+                                    onModify={handleSectionModify}
+                                    isLoading={isModifying}
+                                />
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex items-center justify-center p-8">
+                                <div className="text-center">
+                                    <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center border border-gray-700/50">
+                                        <div className="text-4xl opacity-60">📋</div>
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-white mb-3">Select a Section</h3>
+                                    <p className="text-gray-400 max-w-md">Choose a section from the sidebar to view and modify your project idea</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
-                    {/* Main Content Area */}
-                    {selectedSectionData ? (
-                        <div className="flex-1 bg-black/20 backdrop-blur-sm">
-                            <SectionEditor 
-                                section={selectedSectionData}
-                                onModify={handleSectionModify}
+                    {/* Chat Interface at Bottom */}
+                    <div className="border-t border-gray-700/50 bg-gray-900/80 backdrop-blur-sm">
+                        <div className="p-6">
+                            <div className="mb-4">
+                                <h3 className="text-lg font-semibold text-white mb-2">Modify Entire Idea</h3>
+                                <p className="text-sm text-gray-400">Describe how you'd like to modify the overall project idea</p>
+                            </div>
+                            <ChatModificationInterface 
+                                onModifyIdea={handleOverallIdeaModify}
                                 isLoading={isModifying}
+                                user={user}
                             />
                         </div>
-                    ) : (
-                        <div className="flex-1 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-                            <div className="text-center text-gray-400">
-                                <div className="text-6xl mb-4 opacity-50">📋</div>
-                                <h3 className="text-2xl font-bold mb-3 text-white">Select a Section</h3>
-                                <p className="text-gray-400">Choose a section from the sidebar to view and modify</p>
-                            </div>
-                        </div>
-                    )}
-                </div>
-                
-                {/* Fixed Chat Input for Overall Idea Modification - Only covers details area */}
-                <div className="sticky bottom-0 right-0 ml-80 bg-black/95 backdrop-blur-sm border-t border-gray-800/60 p-6 shadow-2xl z-20">
-                    <ChatModificationInterface 
-                        onModifyIdea={handleOverallIdeaModify}
-                        isLoading={isModifying}
-                        user={user}
-                    />
+                    </div>
                 </div>
             </div>
 
