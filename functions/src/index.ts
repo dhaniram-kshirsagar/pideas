@@ -91,9 +91,11 @@ function isValidProjectIdea(idea: any): idea is ProjectIdea {
 }
 
 interface IdeaGenerationRequest {
-  query: string;
-  studentProfile: StudentProfile;
-  gameResponses: any[];
+  query?: string;
+  prompt?: string;
+  studentProfile?: StudentProfile;
+  gameResponses?: any[];
+  discoveryMode?: boolean;
 }
 
 interface HistorySaveRequest {
@@ -107,10 +109,229 @@ interface HistorySaveRequest {
   gameSteps: any[];
 }
 
+// Admin and Role Management Interfaces
+interface UserRole {
+  userId: string;
+  email: string;
+  role: 'admin' | 'user';
+  createdAt: string;
+  lastLogin?: string;
+  status: 'active' | 'inactive';
+}
+
+interface AdminAction {
+  adminId: string;
+  action: string;
+  targetUserId?: string;
+  timestamp: string;
+  details: any;
+}
+
+interface UserManagementRequest {
+  adminUserId: string;
+  targetUserId?: string;
+  newRole?: 'admin' | 'user';
+  newStatus?: 'active' | 'inactive';
+}
+
+interface BulkUserRequest {
+  adminUserId: string;
+  userIds: string[];
+  action: 'changeRole' | 'changeStatus' | 'export';
+  newRole?: 'admin' | 'user';
+  newStatus?: 'active' | 'inactive';
+}
+
+// Helper functions for admin operations
+async function isUserAdmin(userId: string): Promise<boolean> {
+  try {
+    const db = admin.firestore();
+    const userDoc = await db.collection('userRoles').doc(userId).get();
+    
+    if (!userDoc.exists) {
+      return false;
+    }
+    
+    const userData = userDoc.data() as UserRole;
+    return userData.role === 'admin' && userData.status === 'active';
+  } catch (error) {
+    logger.error('Error checking admin status:', error);
+    return false;
+  }
+}
+
+async function logAdminAction(adminId: string, action: string, targetUserId?: string, details?: any): Promise<void> {
+  try {
+    const db = admin.firestore();
+    const actionLog: AdminAction = {
+      adminId,
+      action,
+      targetUserId,
+      timestamp: new Date().toISOString(),
+      details: details || {}
+    };
+    
+    await db.collection('adminLogs').add(actionLog);
+  } catch (error) {
+    logger.error('Error logging admin action:', error);
+  }
+}
+
+async function ensureUserRole(userId: string, email: string): Promise<void> {
+  try {
+    const db = admin.firestore();
+    const userRoleDoc = await db.collection('userRoles').doc(userId).get();
+    
+    if (!userRoleDoc.exists) {
+      // Check if this is the first user (make them admin)
+      const allUsersSnapshot = await db.collection('userRoles').limit(1).get();
+      const isFirstUser = allUsersSnapshot.empty;
+      
+      // Create user role (first user becomes admin)
+      const userRole: UserRole = {
+        userId,
+        email,
+        role: isFirstUser ? 'admin' : 'user',
+        createdAt: new Date().toISOString(),
+        status: 'active'
+      };
+      
+      await db.collection('userRoles').doc(userId).set(userRole);
+      
+      if (isFirstUser) {
+        logger.info(`First user ${email} created as admin`);
+      }
+    }
+  } catch (error) {
+    logger.error('Error ensuring user role:', error);
+  }
+}
+
+// Helper function to create discovery mode prompt (multiple brief ideas)
+function createDiscoveryPrompt(inputQuery: string, profile: StudentProfile): string {
+  return `
+You are an expert educational project advisor. Generate exactly 6-8 diverse project ideas for students.
+
+Student Profile:
+- Field of Study: ${profile.stream || 'Engineering'}
+- Skill Level: ${profile.skillLevel || 'Intermediate'}
+- Interests: ${profile.interests?.join(', ') || 'General'}
+- Time Available: ${profile.projectDuration || '1-2 months'}
+- Preferred Technologies: ${profile.preferredTechnologies?.join(', ') || 'Flexible'}
+
+Request: ${inputQuery}
+
+Generate 6-8 BRIEF project ideas in this EXACT format:
+
+## Project Title 1
+**Description:** [2-3 sentence description]
+**Difficulty:** [Beginner/Intermediate/Advanced]
+**Time:** [X weeks]
+**Technologies:** [specific tech stack]
+**You'll Learn:** [key learning outcomes]
+
+## Project Title 2
+**Description:** [2-3 sentence description]
+**Difficulty:** [Beginner/Intermediate/Advanced]
+**Time:** [X weeks]
+**Technologies:** [specific tech stack]
+**You'll Learn:** [key learning outcomes]
+
+[Continue for 6-8 projects total]
+
+IMPORTANT:
+- Each project should be BRIEF (not comprehensive plans)
+- Focus on variety and different approaches
+- Match the student's ${profile.skillLevel || 'intermediate'} skill level
+- Align with interests: ${profile.interests?.join(', ') || 'general programming'}
+- Ensure projects can be completed in ${profile.projectDuration || '1-2 months'}
+- Use preferred technologies when possible: ${profile.preferredTechnologies?.join(', ') || 'flexible'}
+`;
+}
+
+// Helper function to create comprehensive mode prompt (single detailed plan)
+function createComprehensivePrompt(inputQuery: string, profile: StudentProfile): string {
+  return `
+You are an expert educational project advisor for ${profile.stream || 'engineering'} students.
+
+Student Context:
+- Academic Stream: ${profile.stream || 'Not specified'}
+- Year: ${profile.year || 'Not specified'}
+- Skill Level: ${profile.skillLevel || 'Intermediate'}
+- Interests: ${profile.interests?.join(', ') || 'General'}
+- Preferred Technologies: ${profile.preferredTechnologies?.join(', ') || 'Flexible'}
+- Team Size: ${profile.teamSize || 'Individual'}
+- Project Duration: ${profile.projectDuration || '1-2 months'}
+
+Project Query: ${inputQuery}
+
+Generate a comprehensive project idea that follows this EXACT structure:
+
+## PROJECT TITLE
+[Creative, specific title]
+
+## PROJECT OVERVIEW
+[2-3 sentence description of what the project does and its purpose]
+
+## LEARNING OBJECTIVES
+[3-4 specific learning goals the student will achieve]
+
+## TECHNICAL REQUIREMENTS
+### Technologies Needed:
+[List of specific technologies, frameworks, tools]
+
+### Skills Required:
+[List of technical and soft skills needed]
+
+### Difficulty Level:
+[Beginner/Intermediate/Advanced with brief justification]
+
+## PROJECT STRUCTURE
+### Phase 1: Planning & Setup (Week 1)
+[Specific tasks for initial phase]
+
+### Phase 2: Core Development (Weeks 2-X)
+[Main development tasks]
+
+### Phase 3: Testing & Refinement (Final Week)
+[Testing, debugging, documentation tasks]
+
+## KEY DELIVERABLES
+[List of specific outputs/artifacts the student will create]
+
+## IMPLEMENTATION GUIDE
+### Getting Started:
+[Step-by-step initial setup instructions]
+
+### Key Resources:
+[Specific tutorials, documentation, tools]
+
+### Common Challenges & Solutions:
+[Anticipated problems and how to solve them]
+
+## LEARNING OUTCOMES
+[What the student will know/be able to do after completion]
+
+## PROJECT VARIATIONS
+### Beginner Version:
+[Simplified version if needed]
+
+### Advanced Extensions:
+[Ways to expand the project for advanced students]
+
+Ensure the project is:
+1. Appropriate for ${profile.skillLevel || 'intermediate'} level
+2. Completable in ${profile.projectDuration || '1-2 months'}
+3. Suitable for ${profile.teamSize || 'individual work'}
+4. Uses technologies the student prefers: ${profile.preferredTechnologies?.join(', ') || 'flexible technologies'}
+5. Relevant to ${profile.stream || 'engineering'} curriculum
+`;
+}
+
 /**
  * Get gamification questions for context gathering
  */
-export const getGameSteps = onCall({maxInstances: 5}, async (request: any) => {
+export const gameStepsGet = onCall({maxInstances: 5}, async (request: any) => {
   try {
     const { stepNumber } = request.data;
     
@@ -191,11 +412,16 @@ export const getGameSteps = onCall({maxInstances: 5}, async (request: any) => {
  */
 export const generateIdea = onCall({maxInstances: 5, timeoutSeconds: 300}, async (request: any) => {
   try {
-    const { query, studentProfile, gameResponses }: IdeaGenerationRequest = request.data;
+    const { query, prompt, studentProfile, gameResponses, discoveryMode }: IdeaGenerationRequest = request.data;
     
-    if (!query || typeof query !== "string") {
-      throw new Error("Invalid query parameter");
+    // Accept either query or prompt parameter for compatibility
+    const inputQuery = query || prompt;
+    
+    if (!inputQuery || typeof inputQuery !== "string") {
+      throw new Error("Invalid query/prompt parameter");
     }
+    
+    logger.info("Received request with:", { query, prompt, hasStudentProfile: !!studentProfile, discoveryMode });
 
     // Validate student profile structure
     const profile: StudentProfile = studentProfile || {
@@ -208,84 +434,22 @@ export const generateIdea = onCall({maxInstances: 5, timeoutSeconds: 300}, async
       projectDuration: '1-2 months'
     };
 
-    logger.info("Generating comprehensive idea for:", { query, studentProfile: profile });
+    logger.info("Generating idea for:", { inputQuery, studentProfile: profile, discoveryMode });
 
-    // Build context-rich prompt
-    const contextPrompt = `
-You are an expert educational project advisor for ${profile.stream || 'engineering'} students.
-
-Student Context:
-- Academic Stream: ${profile.stream || 'Not specified'}
-- Year: ${profile.year || 'Not specified'}
-- Skill Level: ${profile.skillLevel || 'Intermediate'}
-- Interests: ${profile.interests?.join(', ') || 'General'}
-- Preferred Technologies: ${profile.preferredTechnologies?.join(', ') || 'Flexible'}
-- Team Size: ${profile.teamSize || 'Individual'}
-- Project Duration: ${profile.projectDuration || '1-2 months'}
-
-Project Query: ${query}
-
-Generate a comprehensive project idea that follows this EXACT structure:
-
-## PROJECT TITLE
-[Creative, specific title]
-
-## PROJECT OVERVIEW
-[2-3 sentence description of what the project does and its purpose]
-
-## LEARNING OBJECTIVES
-[3-4 specific learning goals the student will achieve]
-
-## TECHNICAL REQUIREMENTS
-### Technologies Needed:
-[List of specific technologies, frameworks, tools]
-
-### Skills Required:
-[List of technical and soft skills needed]
-
-### Difficulty Level:
-[Beginner/Intermediate/Advanced with brief justification]
-
-## PROJECT STRUCTURE
-### Phase 1: Planning & Setup (Week 1)
-[Specific tasks for initial phase]
-
-### Phase 2: Core Development (Weeks 2-X)
-[Main development tasks]
-
-### Phase 3: Testing & Refinement (Final Week)
-[Testing, debugging, documentation tasks]
-
-## KEY DELIVERABLES
-[List of specific outputs/artifacts the student will create]
-
-## IMPLEMENTATION GUIDE
-### Getting Started:
-[Step-by-step initial setup instructions]
-
-### Key Resources:
-[Specific tutorials, documentation, tools]
-
-### Common Challenges & Solutions:
-[Anticipated problems and how to solve them]
-
-## LEARNING OUTCOMES
-[What the student will know/be able to do after completion]
-
-## PROJECT VARIATIONS
-### Beginner Version:
-[Simplified version if needed]
-
-### Advanced Extensions:
-[Ways to expand the project for advanced students]
-
-Ensure the project is:
-1. Appropriate for ${profile.skillLevel || 'intermediate'} level
-2. Completable in ${profile.projectDuration || '1-2 months'}
-3. Suitable for ${profile.teamSize || 'individual work'}
-4. Uses technologies the student prefers: ${profile.preferredTechnologies?.join(', ') || 'flexible technologies'}
-5. Relevant to ${profile.stream || 'engineering'} curriculum
-`;
+    // Check if this is a discovery mode request (multiple brief ideas)
+    const isDiscoveryRequest = discoveryMode || inputQuery.includes('Generate 6-8') || inputQuery.includes('diverse project ideas');
+    
+    let contextPrompt: string;
+    
+    if (isDiscoveryRequest) {
+      // Discovery mode: Generate multiple brief project ideas
+      contextPrompt = createDiscoveryPrompt(inputQuery, profile);
+    } else {
+      // Regular mode: Generate one comprehensive project plan
+      contextPrompt = createComprehensivePrompt(inputQuery, profile);
+    }
+    
+    logger.info("Using prompt type:", isDiscoveryRequest ? 'Discovery (Multiple Ideas)' : 'Comprehensive (Single Plan)');
     
     // Using the gemini model with genkit
     const apiKey = process.env.GEMINI_API_KEY;
@@ -325,7 +489,8 @@ Ensure the project is:
           studentProfile: profile,
           query,
           gameResponses,
-          validated: ideaIsValid
+          validated: ideaIsValid,
+          promptType: isDiscoveryRequest ? 'discovery' : 'comprehensive'
         }
       };
     } catch (genkitError) {
@@ -362,6 +527,23 @@ export const saveIdeaToHistory = onCall({maxInstances: 5}, async (request: any) 
     
     if (!userId) {
       throw new Error("User ID is required");
+    }
+    
+    // Ensure user role exists (create default if not)
+    // Get user email from Firebase Auth
+    try {
+      const userRecord = await admin.auth().getUser(userId);
+      if (userRecord.email) {
+        await ensureUserRole(userId, userRecord.email);
+        
+        // Update last login timestamp
+        const db = admin.firestore();
+        await db.collection('userRoles').doc(userId).update({
+          lastLogin: new Date().toISOString()
+        });
+      }
+    } catch (authError) {
+      logger.warn('Could not get user email for role management:', authError);
     }
 
     // Create a new history document in Firestore
@@ -452,5 +634,386 @@ export const getUserHistory = onCall({maxInstances: 5}, async (request: any) => 
   } catch (error) {
     logger.error("Error getting user history:", error);
     throw new Error(`Failed to get history: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+});
+
+/**
+ * Get all users for admin console (admin only)
+ */
+export const getAllUsers = onCall({maxInstances: 3}, async (request: any) => {
+  try {
+    const { adminUserId } = request.data;
+    
+    if (!adminUserId) {
+      throw new Error("Admin user ID is required");
+    }
+    
+    // Check if user is admin
+    const isAdmin = await isUserAdmin(adminUserId);
+    if (!isAdmin) {
+      throw new Error("Access denied: Admin privileges required");
+    }
+    
+    const db = admin.firestore();
+    
+    // Get all user roles
+    const usersSnapshot = await db.collection('userRoles').get();
+    const users: UserRole[] = [];
+    
+    usersSnapshot.forEach((doc) => {
+      users.push(doc.data() as UserRole);
+    });
+    
+    // Log admin action
+    await logAdminAction(adminUserId, 'VIEW_ALL_USERS');
+    
+    return {
+      success: true,
+      users: users.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    };
+  } catch (error) {
+    logger.error("Error getting all users:", error);
+    throw new Error(`Failed to get users: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+});
+
+/**
+ * Get user's role and permissions
+ */
+export const getUserRole = onCall({maxInstances: 5}, async (request: any) => {
+  try {
+    const { userId } = request.data;
+    
+    if (!userId) {
+      throw new Error("User ID is required");
+    }
+    
+    const db = admin.firestore();
+    const userDoc = await db.collection('userRoles').doc(userId).get();
+    
+    if (!userDoc.exists) {
+      // Return default user role
+      return {
+        success: true,
+        role: 'user',
+        status: 'active',
+        isAdmin: false
+      };
+    }
+    
+    const userData = userDoc.data() as UserRole;
+    
+    return {
+      success: true,
+      role: userData.role,
+      status: userData.status,
+      isAdmin: userData.role === 'admin' && userData.status === 'active'
+    };
+  } catch (error) {
+    logger.error("Error getting user role:", error);
+    throw new Error(`Failed to get user role: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+});
+
+/**
+ * Update user role (admin only)
+ */
+export const updateUserRole = onCall({maxInstances: 3}, async (request: any) => {
+  try {
+    const { adminUserId, targetUserId, newRole, newStatus }: UserManagementRequest = request.data;
+    
+    if (!adminUserId || !targetUserId) {
+      throw new Error("Admin user ID and target user ID are required");
+    }
+    
+    // Check if user is admin
+    const isAdmin = await isUserAdmin(adminUserId);
+    if (!isAdmin) {
+      throw new Error("Access denied: Admin privileges required");
+    }
+    
+    const db = admin.firestore();
+    const userDoc = await db.collection('userRoles').doc(targetUserId).get();
+    
+    if (!userDoc.exists) {
+      throw new Error("Target user not found");
+    }
+    
+    const currentData = userDoc.data() as UserRole;
+    const updateData: Partial<UserRole> = {};
+    
+    if (newRole && newRole !== currentData.role) {
+      updateData.role = newRole;
+    }
+    
+    if (newStatus && newStatus !== currentData.status) {
+      updateData.status = newStatus;
+    }
+    
+    if (Object.keys(updateData).length === 0) {
+      return {
+        success: true,
+        message: "No changes needed"
+      };
+    }
+    
+    await db.collection('userRoles').doc(targetUserId).update(updateData);
+    
+    // Log admin action
+    await logAdminAction(adminUserId, 'UPDATE_USER_ROLE', targetUserId, {
+      previousRole: currentData.role,
+      newRole: newRole || currentData.role,
+      previousStatus: currentData.status,
+      newStatus: newStatus || currentData.status
+    });
+    
+    return {
+      success: true,
+      message: "User role updated successfully",
+      updatedData: updateData
+    };
+  } catch (error) {
+    logger.error("Error updating user role:", error);
+    throw new Error(`Failed to update user role: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+});
+
+/**
+ * Get all ideas across users (admin only)
+ */
+export const getAllIdeas = onCall({maxInstances: 3}, async (request: any) => {
+  try {
+    const { adminUserId, limit = 100, searchQuery } = request.data;
+    
+    if (!adminUserId) {
+      throw new Error("Admin user ID is required");
+    }
+    
+    // Check if user is admin
+    const isAdmin = await isUserAdmin(adminUserId);
+    if (!isAdmin) {
+      throw new Error("Access denied: Admin privileges required");
+    }
+    
+    const db = admin.firestore();
+    let query = db.collection('projectHistory')
+      .orderBy('generatedAt', 'desc')
+      .limit(limit);
+    
+    const snapshot = await query.get();
+    const ideas: any[] = [];
+    
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      if (!searchQuery || 
+          data.query?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          data.idea?.toLowerCase().includes(searchQuery.toLowerCase())) {
+        ideas.push(data);
+      }
+    });
+    
+    // Log admin action
+    await logAdminAction(adminUserId, 'VIEW_ALL_IDEAS', undefined, { searchQuery, resultCount: ideas.length });
+    
+    return {
+      success: true,
+      ideas,
+      totalCount: ideas.length
+    };
+  } catch (error) {
+    logger.error("Error getting all ideas:", error);
+    throw new Error(`Failed to get all ideas: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+});
+
+/**
+ * Get admin activity logs (admin only)
+ */
+export const getAdminLogs = onCall({maxInstances: 3}, async (request: any) => {
+  try {
+    const { adminUserId, limit = 50 } = request.data;
+    
+    if (!adminUserId) {
+      return { success: false, error: 'Admin user ID is required' };
+    }
+
+    // Verify admin privileges
+    const isAdmin = await isUserAdmin(adminUserId);
+    if (!isAdmin) {
+      return { success: false, error: 'Insufficient privileges' };
+    }
+
+    const db = admin.firestore();
+    const logsSnapshot = await db.collection('adminLogs')
+      .orderBy('timestamp', 'desc')
+      .limit(limit)
+      .get();
+
+    const logs: AdminAction[] = [];
+    logsSnapshot.forEach((doc) => {
+      logs.push(doc.data() as AdminAction);
+    });
+
+    return { success: true, logs };
+  } catch (error) {
+    logger.error('Error fetching admin logs:', error);
+    return { success: false, error: 'Failed to fetch admin logs' };
+  }
+});
+
+/**
+ * Modify a specific section of a project idea
+ */
+export const modifyIdeaSection = onCall({maxInstances: 3, timeoutSeconds: 300}, async (request: any) => {
+  try {
+    const { userId, originalIdea, sectionTitle, sectionContent, modificationPrompt } = request.data;
+    
+    if (!userId || !originalIdea || !sectionTitle || !modificationPrompt) {
+      return { success: false, error: 'Missing required parameters' };
+    }
+
+    // Ensure user role exists
+    const auth = admin.auth();
+    const userRecord = await auth.getUser(userId);
+    await ensureUserRole(userId, userRecord.email || '');
+
+    // Get Gemini API key from environment variables
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    if (!geminiApiKey) {
+      logger.error('Gemini API key not found in environment variables');
+      return { success: false, error: 'API configuration error' };
+    }
+
+    // Initialize Genkit with GoogleAI
+    const ai = genkit({
+      plugins: [googleAI({ apiKey: geminiApiKey })],
+    });
+
+    // Create the modification prompt
+    const modificationSystemPrompt = `You are an expert project idea modifier. Your task is to modify a specific section of a project idea based on user feedback while maintaining consistency with the overall project structure.
+
+Original Project Idea:
+${originalIdea}
+
+Section to Modify: "${sectionTitle}"
+Current Section Content:
+${sectionContent}
+
+Modification Request: ${modificationPrompt}
+
+Instructions:
+1. Modify ONLY the specified section based on the user's request
+2. Maintain the same markdown structure and formatting
+3. Ensure the modified section remains consistent with the overall project theme
+4. Keep the same section header format (## ${sectionTitle})
+5. Return the COMPLETE modified project idea with all sections intact
+6. Make sure all other sections remain unchanged unless they need minor adjustments for consistency
+
+Return the complete modified project idea:`;
+
+    try {
+      // Generate modified idea using Genkit
+      const llmResponse = await ai.generate({
+        model: 'googleai/gemini-2.5-flash',
+        prompt: modificationSystemPrompt,
+        config: {
+          temperature: 0.7,
+          maxOutputTokens: 4000,
+        },
+      });
+      
+      const modifiedIdea = llmResponse.text;
+
+      if (!modifiedIdea || modifiedIdea.trim().length === 0) {
+        throw new Error('Empty response from AI model');
+      }
+
+      logger.info(`Section modification completed for user ${userId}`);
+      
+      return {
+        success: true,
+        modifiedIdea: modifiedIdea,
+        originalSection: sectionContent,
+        modificationPrompt: modificationPrompt
+      };
+
+    } catch (genkitError) {
+      logger.error('Genkit error during section modification:', genkitError);
+      
+      // Fallback: Simple text replacement approach
+      logger.info('Using fallback modification approach');
+      
+      const fallbackModification = `## ${sectionTitle}\n\n${sectionContent}\n\n**Modification Note:** ${modificationPrompt}\n\n*This section has been marked for modification. Please regenerate for full AI-powered modification.*`;
+      
+      // Replace the section in the original idea
+      const sectionRegex = new RegExp(`## ${sectionTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\s\S]*?(?=## |$)`, 'i');
+      const modifiedIdea = originalIdea.replace(sectionRegex, fallbackModification);
+      
+      return {
+        success: true,
+        modifiedIdea: modifiedIdea,
+        originalSection: sectionContent,
+        modificationPrompt: modificationPrompt,
+        fallback: true
+      };
+    }
+
+  } catch (error) {
+    logger.error('Error modifying idea section:', error);
+    return { success: false, error: 'Failed to modify section. Please try again.' };
+  }
+});
+
+/**
+ * Bulk user operations (admin only)
+ */
+export const bulkUserOperations = onCall({maxInstances: 3}, async (request: any) => {
+  try {
+    const { adminUserId, userIds, action, newRole, newStatus }: BulkUserRequest = request.data;
+    
+    if (!adminUserId || !userIds || !Array.isArray(userIds) || !action) {
+      throw new Error("Admin user ID, user IDs array, and action are required");
+    }
+    
+    // Check if user is admin
+    const isAdmin = await isUserAdmin(adminUserId);
+    if (!isAdmin) {
+      throw new Error("Access denied: Admin privileges required");
+    }
+    
+    const db = admin.firestore();
+    const results: any[] = [];
+    
+    for (const userId of userIds) {
+      try {
+        if (action === 'changeRole' && newRole) {
+          await db.collection('userRoles').doc(userId).update({ role: newRole });
+          results.push({ userId, success: true, action: 'roleChanged' });
+        } else if (action === 'changeStatus' && newStatus) {
+          await db.collection('userRoles').doc(userId).update({ status: newStatus });
+          results.push({ userId, success: true, action: 'statusChanged' });
+        }
+      } catch (error) {
+        results.push({ userId, success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+      }
+    }
+    
+    // Log admin action
+    await logAdminAction(adminUserId, 'BULK_USER_OPERATION', undefined, {
+      action,
+      userIds,
+      newRole,
+      newStatus,
+      results
+    });
+    
+    return {
+      success: true,
+      results,
+      message: `Bulk operation completed for ${results.filter(r => r.success).length}/${userIds.length} users`
+    };
+  } catch (error) {
+    logger.error("Error in bulk user operations:", error);
+    throw new Error(`Failed to perform bulk operations: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
