@@ -1422,6 +1422,7 @@ const DiscoveryResult = ({ idea, userProfile, onBackToSelection, onExitDiscovery
                     idea={idea.comprehensivePlan} 
                     onStartNew={onBackToSelection}
                     user={user}
+                    hideHeader={true}
                 />
             </div>
         </div>
@@ -1875,7 +1876,7 @@ const SectionEditor = ({ section, onModify, isLoading }) => {
 };
 
 // Enhanced Project Idea Display Component with Modification System
-const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
+const ProjectIdeaDisplay = ({ idea, onStartNew, user, hideHeader = false }) => {
     const [sections, setSections] = useState([]);
     const [selectedSection, setSelectedSection] = useState(null);
     const [isModifying, setIsModifying] = useState(false);
@@ -2133,66 +2134,68 @@ const ProjectIdeaDisplay = ({ idea, onStartNew, user }) => {
                 <ParticleSystem />
             </div>
             
-            {/* Header - Matching AppScreen style */}
-            <header className="bg-black/50 backdrop-blur-sm border-b border-gray-800 p-4 relative z-10">
-                <div className="max-w-6xl mx-auto flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                        <h1 className="text-2xl font-bold text-white">Pideas</h1>
-                        <span className="text-gray-400">|</span>
-                        <span className="text-gray-300">Your Personalized Project Idea</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <IconButton
-                            iconType="history"
-                            tooltip="History"
-                            onClick={() => window.location.reload()} // Navigate back to main page
-                            variant="default"
-                        />
-                        {user && user.role === 'admin' && (
-                            <IconButton
-                                iconType="admin"
-                                tooltip="Admin Console"
-                                onClick={() => window.location.reload()} // Navigate back to main page
-                                variant="admin"
-                            />
-                        )}
-                        
-                        {modificationHistory.length > 0 && (
-                            <IconButton
-                                iconType="reset"
-                                tooltip="Reset to Original"
-                                onClick={handleResetToOriginal}
-                                variant="default"
-                                className="text-gray-400 hover:text-white bg-black hover:bg-gray-900 border border-gray-800/60"
-                            />
-                        )}
-                        <IconButton
-                            iconType="idea"
-                            tooltip="Generate New Idea"
-                            onClick={onStartNew}
-                            variant="primary"
-                            className="bg-black border border-gray-800 hover:bg-gray-900 text-gray-300 hover:text-white"
-                        />
-                        
-                        {/* User profile section */}
-                        <div className="relative flex items-center">
-                            <UserProfileIcon onClick={() => {}} />
+            {/* Header - Matching AppScreen style - Only shown when not in DiscoveryResult */}
+            {!hideHeader && (
+                <header className="bg-black/50 backdrop-blur-sm border-b border-gray-800 p-4 relative z-10">
+                    <div className="max-w-6xl mx-auto flex justify-between items-center">
+                        <div className="flex items-center gap-4">
+                            <h1 className="text-2xl font-bold text-white">Pideas</h1>
+                            <span className="text-gray-400">|</span>
+                            <span className="text-gray-300">Your Personalized Project Idea</span>
                         </div>
-                        
-                        <IconButton
-                            iconType="logout"
-                            tooltip="Logout"
-                            onClick={() => {
-                                if (typeof firebase !== 'undefined') {
-                                    firebase.auth().signOut();
-                                }
-                                window.location.reload();
-                            }}
-                            variant="default"
-                        />
+                        <div className="flex items-center gap-4">
+                            <IconButton
+                                iconType="history"
+                                tooltip="History"
+                                onClick={() => window.location.reload()} // Navigate back to main page
+                                variant="default"
+                            />
+                            {user && user.role === 'admin' && (
+                                <IconButton
+                                    iconType="admin"
+                                    tooltip="Admin Console"
+                                    onClick={() => window.location.reload()} // Navigate back to main page
+                                    variant="admin"
+                                />
+                            )}
+                            
+                            {modificationHistory.length > 0 && (
+                                <IconButton
+                                    iconType="reset"
+                                    tooltip="Reset to Original"
+                                    onClick={handleResetToOriginal}
+                                    variant="default"
+                                    className="text-gray-400 hover:text-white bg-black hover:bg-gray-900 border border-gray-800/60"
+                                />
+                            )}
+                            <IconButton
+                                iconType="idea"
+                                tooltip="Generate New Idea"
+                                onClick={onStartNew}
+                                variant="primary"
+                                className="bg-black border border-gray-800 hover:bg-gray-900 text-gray-300 hover:text-white"
+                            />
+                            
+                            {/* User profile section */}
+                            <div className="relative flex items-center">
+                                <UserProfileIcon onClick={() => {}} />
+                            </div>
+                            
+                            <IconButton
+                                iconType="logout"
+                                tooltip="Logout"
+                                onClick={() => {
+                                    if (typeof firebase !== 'undefined') {
+                                        firebase.auth().signOut();
+                                    }
+                                    window.location.reload();
+                                }}
+                                variant="default"
+                            />
+                        </div>
                     </div>
-                </div>
-            </header>
+                </header>
+            )}
 
             {/* Main Content */}
             <div className="relative z-10 flex-1 flex overflow-hidden">
