@@ -24,6 +24,7 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "react-scripts": "^5.0.1"
+    "react-scripts": "^5.0.1",
+    "typescript": "^5.8.3"
   }
 }
