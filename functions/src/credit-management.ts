@@ -81,7 +81,8 @@ export interface UserCredits {
   email: string;
   role: UserRole;
   credits: number;
-  dailyCredits: {
+  totalCredits: number; // Total credits ever received (for progress tracking)
+  dailyCredits?: {
     remaining: number;
     lastRefresh: admin.firestore.Timestamp;
   };
@@ -121,6 +122,7 @@ export async function initializeUserCredits(userId: string, email: string, role:
     email,
     role,
     credits: initialCredits,
+    totalCredits: initialCredits, // Track total credits ever received
     dailyCredits: {
       remaining: DAILY_CREDITS[role],
       lastRefresh: admin.firestore.Timestamp.now()
@@ -157,7 +159,7 @@ export async function getUserCredits(userId: string): Promise<UserCredits | null
   const userData = userDoc.data() as UserCredits;
   
   // Check if daily refresh is needed
-  if (userData.role !== 'free' && userData.role !== 'enterprise') {
+  if (userData.role !== 'free' && userData.role !== 'enterprise' && userData.dailyCredits) {
     const lastRefresh = userData.dailyCredits.lastRefresh.toDate();
     const now = new Date();
     const daysSinceRefresh = (now.getTime() - lastRefresh.getTime()) / (1000 * 60 * 60 * 24);
@@ -255,7 +257,8 @@ export async function addCredits(userId: string, amount: number, packageId?: str
   
   try {
     await db.collection('userCredits').doc(userId).update({
-      credits: admin.firestore.FieldValue.increment(amount)
+      credits: admin.firestore.FieldValue.increment(amount),
+      totalCredits: admin.firestore.FieldValue.increment(amount)
     });
     
     // Log credit addition
