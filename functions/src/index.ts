@@ -16,20 +16,6 @@ import * as admin from "firebase-admin";
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 
-// Import credit management functions
-import {
-  getUserCreditsFunction,
-  checkCreditsFunction,
-  getAvailablePackagesFunction,
-  purchaseCreditsFunction,
-  getCreditHistoryFunction,
-  adminAddCreditsFunction,
-  adminUpdateUserRoleFunction,
-  adminGetAllUsersFunction,
-  adminGetCreditAnalyticsFunction
-} from './credit-functions';
-// Credit management functions are imported via credit-functions.ts
-
 // Initialize Firebase admin
 admin.initializeApp();
 
@@ -1031,14 +1017,3 @@ export const bulkUserOperations = onCall({maxInstances: 3}, async (request: any)
     throw new Error(`Failed to perform bulk operations: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
-
-// Export credit management functions
-export const getUserCredits = getUserCreditsFunction;
-export const checkCredits = checkCreditsFunction;
-export const getAvailablePackages = getAvailablePackagesFunction;
-export const purchaseCredits = purchaseCreditsFunction;
-export const getCreditHistory = getCreditHistoryFunction;
-export const adminAddCredits = adminAddCreditsFunction;
-export const adminUpdateUserRole = adminUpdateUserRoleFunction;
-export const adminGetAllUsers = adminGetAllUsersFunction;
-export const adminGetCreditAnalytics = adminGetCreditAnalyticsFunction;
