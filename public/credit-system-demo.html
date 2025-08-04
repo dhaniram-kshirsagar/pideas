@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Idea Generator - Credit System Demo</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React and ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-functions-compat.js"></script>
+    
+    <style>
+        /* Custom animations for credit system */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .animate-fade-out {
+            animation: fadeOut 0.3s ease-out;
+        }
+        
+        .animate-pulse-scale {
+            animation: pulse 2s infinite;
+        }
+        
+        /* Credit system specific styles */
+        .credit-glow {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+        
+        .low-credit-warning {
+            animation: pulse 1.5s infinite;
+            color: #fbbf24;
+        }
+        
+        /* Billing page styles */
+        .pricing-card {
+            transition: all 0.3s ease;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .popular-badge {
+            background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+        }
+        
+        /* Admin panel styles */
+        .admin-card {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+        
+        .role-badge-free {
+            background: rgba(107, 114, 128, 0.2);
+            color: #d1d5db;
+            border: 1px solid #4b5563;
+        }
+        
+        .role-badge-pro {
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+            border: 1px solid #3b82f6;
+        }
+        
+        .role-badge-enterprise {
+            background: rgba(139, 92, 246, 0.2);
+            color: #c4b5fd;
+            border: 1px solid #8b5cf6;
+        }
+    </style>
+</head>
+<body class="bg-black text-white">
+    <div id="root"></div>
+    
+    <!-- Firebase Configuration -->
+    <script>
+        // Initialize Firebase (replace with your config)
+        const firebaseConfig = {
+            // Your Firebase configuration
+            apiKey: "your-api-key",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "your-app-id"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+    </script>
+    
+    <!-- Load Components -->
+    <script src="components/CreditDisplay.js"></script>
+    <script src="components/BillingPage.js"></script>
+    <script src="components/AdminCreditManagement.js"></script>
+    <script src="components/CreditSystemIntegration.js"></script>
+    
+    <!-- Main Demo Application -->
+    <script>
+        const { useState, useEffect, useRef } = React;
+        
+        // Demo Application Component
+        const CreditSystemDemo = () => {
+            const [currentView, setCurrentView] = useState('demo');
+            const [user, setUser] = useState({
+                uid: 'demo-user-123',
+                displayName: 'Demo User',
+                email: 'demo@example.com'
+            });
+            const [userRole, setUserRole] = useState({ role: 'free', isAdmin: false });
+            
+            // Use the credit system hook
+            const {
+                userCredits,
+                isLoadingCredits,
+                creditError,
+                loadUserCredits,
+                checkCredits,
+                refreshCredits
+            } = window.CreditSystemIntegration.useCreditSystem();
+            
+            // Mock user credits for demo
+            const mockUserCredits = {
+                credits: 15,
+                role: 'pro',
+                dailyCredits: {
+                    remaining: 3,
+                    lastRefresh: new Date()
+                },
+                status: 'active'
+            };
+            
+            useEffect(() => {
+                // In a real app, this would load actual user credits
+                // For demo, we'll use mock data
+                setTimeout(() => {
+                    // Simulate loading credits
+                }, 1000);
+            }, []);
+            
+            const handlePurchaseComplete = () => {
+                alert('Purchase completed! Credits have been added to your account.');
+                refreshCredits(user.uid);
+                setCurrentView('demo');
+            };
+            
+            const handleInsufficientCredits = (actionType) => {
+                alert(`You don't have enough credits for ${actionType}. Please purchase more credits.`);
+                setCurrentView('billing');
+            };
+            
+            const simulateGeneration = async (actionType) => {
+                const hasCredits = await checkCredits(actionType);
+                
+                if (!hasCredits) {
+                    handleInsufficientCredits(actionType);
+                    return;
+                }
+                
+                alert(`Generating idea with ${actionType}... (This would deduct credits in the real app)`);
+            };
+            
+            return (
+                <div className="min-h-screen bg-black">
+                    {/* Navigation */}
+                    <nav className="border-b border-gray-800 p-4">
+                        <div className="max-w-6xl mx-auto flex justify-between items-center">
+                            <h1 className="text-2xl font-bold text-white">Credit System Demo</h1>
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={() => setCurrentView('demo')}
+                                    className={`px-4 py-2 rounded-lg ${currentView === 'demo' ? 'bg-blue-600' : 'bg-gray-800'}`}
+                                >
+                                    Demo
+                                </button>
+                                <button
+                                    onClick={() => setCurrentView('billing')}
+                                    className={`px-4 py-2 rounded-lg ${currentView === 'billing' ? 'bg-blue-600' : 'bg-gray-800'}`}
+                                >
+                                    Billing
+                                </button>
+                                <button
+                                    onClick={() => setCurrentView('admin')}
+                                    className={`px-4 py-2 rounded-lg ${currentView === 'admin' ? 'bg-blue-600' : 'bg-gray-800'}`}
+                                >
+                                    Admin
+                                </button>
+                                
+                                {/* Credit Display */}
+                                <CreditDisplay 
+                                    userCredits={mockUserCredits}
+                                    onPurchaseClick={() => setCurrentView('billing')}
+                                />
+                            </div>
+                        </div>
+                    </nav>
+                    
+                    {/* Main Content */}
+                    <main className="p-8">
+                        {currentView === 'demo' && (
+                            <div className="max-w-4xl mx-auto">
+                                <div className="text-center mb-8">
+                                    <h2 className="text-4xl font-bold mb-4">Credit System Demo</h2>
+                                    <p className="text-gray-400">
+                                        This demo shows how the credit system integrates with the Project Idea Generator
+                                    </p>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Direct Generation */}
+                                    <div className="bg-gray-900/50 border border-gray-700 rounded-xl p-6">
+                                        <h3 className="text-xl font-bold mb-4">Direct Generation</h3>
+                                        <p className="text-gray-400 mb-4">
+                                            Generate project ideas directly. Costs 3-5 credits depending on your role.
+                                        </p>
+                                        <button
+                                            onClick={() => simulateGeneration('direct_generation')}
+                                            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors"
+                                        >
+                                            Generate Idea (3-5 credits)
+                                        </button>
+                                    </div>
+                                    
+                                    {/* Discovery Generation */}
+                                    <div className="bg-gray-900/50 border border-gray-700 rounded-xl p-6">
+                                        <h3 className="text-xl font-bold mb-4">Discovery Generation</h3>
+                                        <p className="text-gray-400 mb-4">
+                                            Use the gamified discovery process. Costs 5-8 credits depending on your role.
+                                        </p>
+                                        <button
+                                            onClick={() => simulateGeneration('discovery_generation')}
+                                            className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium transition-colors"
+                                        >
+                                            Start Discovery (5-8 credits)
+                                        </button>
+                                    </div>
+                                    
+                                    {/* Idea Modification */}
+                                    <div className="bg-gray-900/50 border border-gray-700 rounded-xl p-6">
+                                        <h3 className="text-xl font-bold mb-4">Idea Modification</h3>
+                                        <p className="text-gray-400 mb-4">
+                                            Modify existing project ideas. Costs 2-3 credits depending on your role.
+                                        </p>
+                                        <button
+                                            onClick={() => simulateGeneration('idea_modification')}
+                                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg font-medium transition-colors"
+                                        >
+                                            Modify Idea (2-3 credits)
+                                        </button>
+                                    </div>
+                                    
+                                    {/* Credit Information */}
+                                    <div className="bg-gray-900/50 border border-gray-700 rounded-xl p-6">
+                                        <h3 className="text-xl font-bold mb-4">Your Credits</h3>
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-400">Available Credits:</span>
+                                                <span className="text-white font-bold">{mockUserCredits.credits}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-400">Role:</span>
+                                                <span className="text-blue-400 capitalize">{mockUserCredits.role}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-400">Daily Credits:</span>
+                                                <span className="text-emerald-400">{mockUserCredits.dailyCredits.remaining}</span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => setCurrentView('billing')}
+                                            className="w-full mt-4 bg-emerald-700 hover:bg-emerald-600 text-white py-2 rounded-lg font-medium transition-colors"
+                                        >
+                                            Buy More Credits
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {currentView === 'billing' && (
+                            <BillingPage
+                                user={user}
+                                userCredits={mockUserCredits}
+                                onBack={() => setCurrentView('demo')}
+                                onPurchaseComplete={handlePurchaseComplete}
+                            />
+                        )}
+                        
+                        {currentView === 'admin' && (
+                            <AdminCreditManagement
+                                user={user}
+                                onBack={() => setCurrentView('demo')}
+                            />
+                        )}
+                    </main>
+                </div>
+            );
+        };
+        
+        // Render the demo application
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<CreditSystemDemo />);
+    </script>
+</body>
+</html>

@@ -16,6 +16,20 @@ import * as admin from "firebase-admin";
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 
+// Import credit management functions
+import {
+  getUserCreditsFunction,
+  checkCreditsFunction,
+  getAvailablePackagesFunction,
+  purchaseCreditsFunction,
+  getCreditHistoryFunction,
+  adminAddCreditsFunction,
+  adminUpdateUserRoleFunction,
+  adminGetAllUsersFunction,
+  adminGetCreditAnalyticsFunction
+} from './credit-functions';
+import { hasEnoughCredits, deductCredits } from './credit-management';
+
 // Initialize Firebase admin
 admin.initializeApp();
 
@@ -465,7 +479,7 @@ export const generateIdea = onCall({maxInstances: 5, timeoutSeconds: 300}, async
         plugins: [googleAI({
           apiKey: apiKey
         })],
-      model: googleAI.model('gemini-2.5-flash'),
+      model: googleAI.model('gemini-2.5-pro'),
       });
       
       const { text } = await ai.generate(contextPrompt);
@@ -914,7 +928,7 @@ Return the complete modified project idea:`;
     try {
       // Generate modified idea using Genkit
       const llmResponse = await ai.generate({
-        model: 'googleai/gemini-2.5-flash',
+        model: 'googleai/gemini-2.5-pro',
         prompt: modificationSystemPrompt,
         config: {
           temperature: 0.7,
@@ -1017,3 +1031,14 @@ export const bulkUserOperations = onCall({maxInstances: 3}, async (request: any)
     throw new Error(`Failed to perform bulk operations: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
+
+// Export credit management functions
+export const getUserCredits = getUserCreditsFunction;
+export const checkCredits = checkCreditsFunction;
+export const getAvailablePackages = getAvailablePackagesFunction;
+export const purchaseCredits = purchaseCreditsFunction;
+export const getCreditHistory = getCreditHistoryFunction;
+export const adminAddCredits = adminAddCreditsFunction;
+export const adminUpdateUserRole = adminUpdateUserRoleFunction;
+export const adminGetAllUsers = adminGetAllUsersFunction;
+export const adminGetCreditAnalytics = adminGetCreditAnalyticsFunction;
