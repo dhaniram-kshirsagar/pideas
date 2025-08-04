@@ -9,7 +9,6 @@ import {
   getUserCredits,
   initializeUserCredits,
   hasEnoughCredits,
-  deductCredits,
   addCredits,
   updateUserRole,
   getCreditHistory,

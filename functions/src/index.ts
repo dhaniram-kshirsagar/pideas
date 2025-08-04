@@ -28,7 +28,7 @@ import {
   adminGetAllUsersFunction,
   adminGetCreditAnalyticsFunction
 } from './credit-functions';
-import { hasEnoughCredits, deductCredits } from './credit-management';
+// Credit management functions are imported via credit-functions.ts
 
 // Initialize Firebase admin
 admin.initializeApp();
