@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, useLayoutEffect } from "react"
+import { createPortal } from "react-dom"
 
 interface User {
   uid: string;
@@ -19,6 +20,39 @@ interface UserProfileCardProps {
 
 export default function UserProfileCard({ user, onLogout, isVisible, onClose }: UserProfileCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const [portalElement, setPortalElement] = useState<HTMLElement | null>(null);
+  
+  // Create portal container for the card
+  useLayoutEffect(() => {
+    // Check if we're in the browser environment
+    if (typeof window !== 'undefined') {
+      // Look for existing portal container or create one
+      let element = document.getElementById('profile-card-portal');
+      if (!element) {
+        element = document.createElement('div');
+        element.id = 'profile-card-portal';
+        element.style.position = 'fixed';
+        element.style.top = '0';
+        element.style.left = '0';
+        element.style.width = '100%';
+        element.style.height = '100%';
+        element.style.pointerEvents = 'none';
+        element.style.zIndex = '9999';
+        document.body.appendChild(element);
+      }
+      setPortalElement(element);
+    }
+    
+    return () => {
+      // Cleanup portal container when component unmounts
+      if (typeof window !== 'undefined') {
+        const element = document.getElementById('profile-card-portal');
+        if (element && element.childNodes.length === 0) {
+          document.body.removeChild(element);
+        }
+      }
+    };
+  }, []);
   
   // Close the card when clicking outside
   useEffect(() => {
@@ -46,15 +80,34 @@ export default function UserProfileCard({ user, onLogout, isVisible, onClose }: 
     };
   }, [isVisible, onClose]);
 
-  if (!isVisible) return null;
+  if (!isVisible || !portalElement) return null;
 
-  return (
+  // Calculate position based on the user icon position
+  const calculatePosition = () => {
+    const iconElement = document.querySelector('.user-profile-icon');
+    if (iconElement) {
+      const rect = iconElement.getBoundingClientRect();
+      return {
+        top: `${rect.bottom + 8}px`,
+        right: `${window.innerWidth - rect.right}px`
+      };
+    }
+    return { top: '64px', right: '16px' };
+  };
+  
+  const position = calculatePosition();
+
+  return createPortal(
     <div 
       ref={cardRef}
-      className="absolute top-16 right-4 w-72 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50 overflow-hidden transition-all duration-300 ease-in-out"
+      className="fixed w-72 bg-gray-800 border border-gray-700 rounded-lg shadow-xl overflow-hidden transition-all duration-300 ease-in-out"
       style={{
+        top: position.top,
+        right: position.right,
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'translateY(0)' : 'translateY(-10px)',
+        pointerEvents: 'auto',
+        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)'  
       }}
     >
       {/* Card Header with User Avatar */}
@@ -131,7 +184,8 @@ export default function UserProfileCard({ user, onLogout, isVisible, onClose }: 
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    portalElement
   );
 }
 
@@ -140,7 +194,7 @@ export function UserProfileIcon({ onClick, isActive }: { onClick: () => void, is
   return (
     <button 
       onClick={onClick}
-      className={`h-10 w-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+      className={`user-profile-icon h-10 w-10 rounded-full flex items-center justify-center transition-all duration-300 ${
         isActive 
           ? 'bg-cyan-600 text-white' 
           : 'bg-gray-800 text-cyan-400 hover:bg-gray-700'
