@@ -79,6 +79,17 @@ export default function LoginWithParticles({ onLoginSuccess }: LoginWithParticle
       if (window.innerWidth > 0 && window.innerHeight > 0) {
         canvas.width = window.innerWidth
         canvas.height = window.innerHeight
+        
+        // Maintain aspect ratio for better text rendering
+        const aspectRatio = 16/9
+        if (canvas.width / canvas.height < aspectRatio) {
+          // Width is the limiting factor, adjust height
+          canvas.height = canvas.width / aspectRatio
+        } else {
+          // Height is the limiting factor, adjust width
+          canvas.width = canvas.height * aspectRatio
+        }
+        
         setIsMobile(window.innerWidth < 768)
       } else {
         console.warn('Invalid window dimensions detected')
@@ -113,8 +124,11 @@ export default function LoginWithParticles({ onLoginSuccess }: LoginWithParticle
       ctx.fillStyle = "white"
       ctx.save()
 
-      // Set up text properties
-      const fontSize = isMobile ? 40 : 80
+      // Set up text properties - adjust font size based on canvas dimensions
+      const canvasArea = canvas.width * canvas.height
+      const baseArea = 1920 * 1080
+      const scaleFactor = Math.sqrt(canvasArea / baseArea)
+      const fontSize = isMobile ? Math.floor(40 * scaleFactor) : Math.floor(80 * scaleFactor)
       ctx.font = `bold ${fontSize}px Arial, sans-serif`
       ctx.textAlign = "center"
       ctx.textBaseline = "middle"
@@ -309,6 +323,7 @@ export default function LoginWithParticles({ onLoginSuccess }: LoginWithParticle
       <canvas
         ref={canvasRef}
         className="w-full h-full absolute top-0 left-0 touch-none"
+        style={{ display: 'block' }}
         aria-label="Interactive particle effect with Project Idea Generator text"
       />
       <div className="absolute bottom-[100px] text-center z-10">

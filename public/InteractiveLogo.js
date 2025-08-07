@@ -22,6 +22,17 @@ const InteractiveLogo = () => {
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight;
             }
+            
+            // Maintain aspect ratio for the canvas
+            const aspectRatio = 16/9;
+            if (canvas.width / canvas.height < aspectRatio) {
+                // Width is the limiting factor, adjust height
+                canvas.height = canvas.width / aspectRatio;
+            } else {
+                // Height is the limiting factor, adjust width
+                canvas.width = canvas.height * aspectRatio;
+            }
+            
             setIsMobile(window.innerWidth < 768); // Set mobile breakpoint
         };
 
@@ -43,8 +54,11 @@ const InteractiveLogo = () => {
             ctx.fillStyle = "white";
             ctx.save();
 
-            // Set up text properties
-            const fontSize = isMobile ? 80 : 120;
+            // Set up text properties - adjust font size based on canvas dimensions
+            const canvasArea = canvas.width * canvas.height;
+            const baseArea = 1920 * 1080;
+            const scaleFactor = Math.sqrt(canvasArea / baseArea);
+            const fontSize = isMobile ? Math.floor(80 * scaleFactor) : Math.floor(120 * scaleFactor);
             ctx.font = `bold ${fontSize}px Arial, sans-serif`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
@@ -92,8 +106,11 @@ const InteractiveLogo = () => {
         }
 
         function createInitialParticles(scale) {
-            const baseParticleCount = 7000; // Increased base count for higher density
-            const particleCount = Math.floor(baseParticleCount * Math.sqrt((canvas.width * canvas.height) / (1920 * 1080)));
+            const baseParticleCount = 8000; // Increased base count for higher density
+            const canvasArea = canvas.width * canvas.height;
+            const baseArea = 1920 * 1080;
+            const densityFactor = canvasArea / baseArea;
+            const particleCount = Math.floor(baseParticleCount * Math.sqrt(densityFactor));
             for (let i = 0; i < particleCount; i++) {
                 const particle = createParticle(scale);
                 if (particle) particles.push(particle);
@@ -158,14 +175,15 @@ const InteractiveLogo = () => {
             animationFrameId = requestAnimationFrame(() => animate(scale));
         }
 
-        // Delay initialization to ensure canvas is properly sized
+        // Initial setup with a small delay to ensure canvas is ready
         setTimeout(() => {
+            updateCanvasSize(); // Ensure canvas is properly sized before creating text
             const scale = createTextImage();
             if (scale > 0) {
                 createInitialParticles(scale);
                 animate(scale);
             }
-        }, 100);
+        }, 200); // Increased delay for better initialization
 
         const handleResize = () => {
             updateCanvasSize();
