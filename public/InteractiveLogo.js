@@ -13,8 +13,15 @@ const InteractiveLogo = () => {
         if (!ctx) return;
 
         const updateCanvasSize = () => {
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
+            // Ensure the canvas element is properly sized before setting dimensions
+            if (canvas.offsetWidth > 0 && canvas.offsetHeight > 0) {
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+            } else {
+                // Fallback to window dimensions if offset dimensions are not available
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
             setIsMobile(window.innerWidth < 768); // Set mobile breakpoint
         };
 
@@ -26,6 +33,12 @@ const InteractiveLogo = () => {
 
         function createTextImage() {
             if (!ctx || !canvas) return 0;
+            
+            // Ensure canvas has valid dimensions before proceeding
+            if (canvas.width <= 0 || canvas.height <= 0) {
+                console.warn('Canvas has invalid dimensions:', canvas.width, canvas.height);
+                return 0;
+            }
 
             ctx.fillStyle = "white";
             ctx.save();
@@ -41,14 +54,18 @@ const InteractiveLogo = () => {
 
             ctx.restore();
 
-            textImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            return 1; // Return a simple scale value
+            try {
+                textImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                return 1; // Return a simple scale value
+            } catch (error) {
+                console.error('Error creating text image:', error);
+                return 0;
+            }
         }
 
         function createParticle(scale) {
-            if (!ctx || !canvas || !textImageData) return null;
+            if (!ctx || !canvas || !textImageData || scale === 0) return null;
 
             const data = textImageData.data;
 
@@ -86,7 +103,7 @@ const InteractiveLogo = () => {
         let animationFrameId;
 
         function animate(scale) {
-            if (!ctx || !canvas) return;
+            if (!ctx || !canvas || scale === 0) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = "transparent";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -141,15 +158,25 @@ const InteractiveLogo = () => {
             animationFrameId = requestAnimationFrame(() => animate(scale));
         }
 
-        const scale = createTextImage();
-        createInitialParticles(scale);
-        animate(scale);
+        // Delay initialization to ensure canvas is properly sized
+        setTimeout(() => {
+            const scale = createTextImage();
+            if (scale > 0) {
+                createInitialParticles(scale);
+                animate(scale);
+            }
+        }, 100);
 
         const handleResize = () => {
             updateCanvasSize();
-            const newScale = createTextImage();
-            particles = [];
-            createInitialParticles(newScale);
+            // Add a small delay to ensure canvas dimensions are updated
+            setTimeout(() => {
+                const newScale = createTextImage();
+                if (newScale > 0) {
+                    particles = [];
+                    createInitialParticles(newScale);
+                }
+            }, 100);
         };
 
         const handleMove = (x, y) => {

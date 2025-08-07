@@ -75,9 +75,14 @@ export default function LoginWithParticles({ onLoginSuccess }: LoginWithParticle
     if (!ctx) return
 
     const updateCanvasSize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
-      setIsMobile(window.innerWidth < 768)
+      // Ensure we have valid dimensions
+      if (window.innerWidth > 0 && window.innerHeight > 0) {
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
+        setIsMobile(window.innerWidth < 768)
+      } else {
+        console.warn('Invalid window dimensions detected')
+      }
     }
 
     updateCanvasSize()
@@ -98,6 +103,12 @@ export default function LoginWithParticles({ onLoginSuccess }: LoginWithParticle
 
     function createTextImage() {
       if (!ctx || !canvas) return 0
+      
+      // Ensure canvas has valid dimensions
+      if (canvas.width <= 0 || canvas.height <= 0) {
+        console.warn('Canvas has invalid dimensions:', canvas.width, canvas.height)
+        return 0
+      }
 
       ctx.fillStyle = "white"
       ctx.save()
@@ -108,19 +119,25 @@ export default function LoginWithParticles({ onLoginSuccess }: LoginWithParticle
       ctx.textAlign = "center"
       ctx.textBaseline = "middle"
 
-      // Draw "Project Idea Generator" text
-      ctx.fillText("Project Idea Generator", canvas.width / 2, canvas.height / 2)
+      try {
+        // Draw "Project Idea Generator" text
+        ctx.fillText("Project Idea Generator", canvas.width / 2, canvas.height / 2)
 
-      ctx.restore()
+        ctx.restore()
 
-      textImageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+        textImageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      return 1
+        return 1
+      } catch (error) {
+        console.error('Error creating text image:', error)
+        ctx.restore()
+        return 0
+      }
     }
 
     function createParticle(scale: number) {
-      if (!ctx || !canvas || !textImageData) return null
+      if (!ctx || !canvas || !textImageData || scale === 0) return null
 
       const data = textImageData.data
 
@@ -158,7 +175,7 @@ export default function LoginWithParticles({ onLoginSuccess }: LoginWithParticle
     let animationFrameId: number
 
     function animate(scale: number) {
-      if (!ctx || !canvas) return
+      if (!ctx || !canvas || scale === 0) return
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       ctx.fillStyle = "black"
       ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -213,9 +230,17 @@ export default function LoginWithParticles({ onLoginSuccess }: LoginWithParticle
       animationFrameId = requestAnimationFrame(() => animate(scale))
     }
 
-    const scale = createTextImage()
-    createInitialParticles(scale)
-    animate(scale)
+    // Delay initialization to ensure canvas is properly sized
+    let scale = 0
+    
+    // Use setTimeout to ensure the canvas is ready
+    setTimeout(() => {
+      scale = createTextImage()
+      if (scale > 0) {
+        createInitialParticles(scale)
+        animate(scale)
+      }
+    }, 100)
 
     const handleMouseMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect()
@@ -250,9 +275,15 @@ export default function LoginWithParticles({ onLoginSuccess }: LoginWithParticle
 
     const handleResize = () => {
       updateCanvasSize()
-      const newScale = createTextImage()
-      particles = []
-      createInitialParticles(newScale)
+      
+      // Add a small delay to ensure canvas dimensions are updated
+      setTimeout(() => {
+        const newScale = createTextImage()
+        if (newScale > 0) {
+          particles = []
+          createInitialParticles(newScale)
+        }
+      }, 100)
     }
 
     window.addEventListener("resize", handleResize)

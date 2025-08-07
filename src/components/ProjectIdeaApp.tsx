@@ -67,7 +67,13 @@ export default function ProjectIdeaApp() {
         })
         loadUserProfile(user.uid)
       } else {
+        // When user is null (logged out), reset all relevant state
         setUser(null)
+        setShowProfileCard(false)
+        setProjectIdea(null)
+        setQuery("")
+        setLastQuery("")
+        setShowWelcome(true) // Reset welcome message for next login
       }
       setLoading(false)
     })
@@ -94,14 +100,24 @@ export default function ProjectIdeaApp() {
 
   const handleLogout = async () => {
     try {
-      const auth = window.firebase.auth()
-      await auth.signOut()
-      setUser(null)
+      // First update state to prepare for logout
+      setShowProfileCard(false)
       setProjectIdea(null)
       setQuery("")
       setLastQuery("")
+      
+      // Add a small delay before actual logout to ensure UI updates complete
+      setTimeout(async () => {
+        try {
+          const auth = window.firebase.auth()
+          await auth.signOut()
+          // User will be set to null by the auth listener
+        } catch (error) {
+          console.error('Logout error:', error)
+        }
+      }, 100)
     } catch (error) {
-      console.error('Logout error:', error)
+      console.error('Logout preparation error:', error)
     }
   }
 
