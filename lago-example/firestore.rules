@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can read and write their own customer data
+    match /customers/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Users can read and write their own usage data
+    match /customers/{userId}/usage/{usageId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Users can read their own invoices
+    match /invoices/{invoiceId} {
+      allow read: if request.auth != null && 
+        resource.data.customer_id == request.auth.uid;
+    }
+    
+    // Admin users can read all data (implement admin check as needed)
+    match /{document=**} {
+      allow read, write: if request.auth != null && 
+        get(/databases/$(database)/documents/customers/$(request.auth.uid)).data.role == 'admin';
+    }
+  }
+}

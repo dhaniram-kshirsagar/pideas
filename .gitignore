@@ -3,6 +3,11 @@
 /.pnp
 .pnp.js
 
+# Lago example dependencies
+/lago-example/node_modules
+/lago-example/functions/node_modules
+/lago-example/functions/lib
+
 # Testing
 /coverage
 

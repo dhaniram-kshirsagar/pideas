@@ -20,28 +20,27 @@
 ### **Service Mapping to Existing Functions**
 1. **Project Idea Generation** → `generateIdea` function (✅ exists)
 2. **Project Generation (GenAI)** → New function needed
-3. **Troubleshooting/Deployment** → New function needed  
-4. **Custom Project** → New function needed
+3. **Troubleshooting/Deployment** → New function needed
 
 ### **Updated Tier Structure**
 
-#### **Learner Tier ($0-5/month)**
+#### **Learner Tier (₹0-99/month)**
 - **Access**: Limited `generateIdea` calls (10-20/month)
 - **Restrictions**: 
   - Hide `implementationGuide` sections
   - Limit `technicalRequirements` details
   - Remove `keyResources` and `commonChallenges`
   - Show only basic `projectStructure` phases
-- **Credits**: 20 idea generations
+- **Credits**: 5 idea generations
 
-#### **Pro Tier ($20/month)**
+#### **Pro Tier (₹699/month)**
 - **Access**: Full `generateIdea` + new project generation service
 - **Features**: Complete project ideas + AI code generation
-- **Credits**: 100 ideas + 10 project generations
+- **Credits**: 25 ideas + 2 project generations
 
-#### **Pro+ Tier ($60/month)**
-- **Access**: All services including troubleshooting and custom projects
-- **Credits**: Unlimited ideas + 25 projects + 10 troubleshooting + 2 custom
+#### **Pro+ Tier (₹3999/month)**
+- **Access**: All services including troubleshooting
+- **Credits**: 100 ideas + 5 projects + 10 troubleshooting 
 
 ## **Implementation Strategy**
 
@@ -50,7 +49,6 @@
 // New Firebase Functions to add
 export const generateProject = onCall() // Full project code generation
 export const troubleshootProject = onCall() // Debug assistance
-export const requestCustomProject = onCall() // Custom development
 export const checkSubscription = onCall() // Lago integration
 export const trackUsage = onCall() // Usage metering
 ```
@@ -110,11 +108,6 @@ troubleshooting_session:
   code: "troubleshoot"
   aggregation_type: "sum_agg"
   field_name: "session_duration"
-
-custom_project:
-  code: "custom_proj"
-  aggregation_type: "count_agg"
-  field_name: "projects"
 ```
 
 ### **Plan Structure in Lago**
@@ -129,7 +122,7 @@ learner_plan:
 
 pro_plan:
   interval: "monthly" 
-  amount_cents: 2000
+  amount_cents: 160000
   charges:
     - billable_metric_code: "idea_gen"
       charge_model: "package" 
@@ -159,7 +152,6 @@ interface UserProfile {
     ideasRemaining: number;
     projectsRemaining: number;
     troubleshootingRemaining: number;
-    customProjectsRemaining: number;
   };
 }
 ```
@@ -169,7 +161,7 @@ interface UserProfile {
 ### **Onboarding**
 1. User signs up → Auto-assigned to Learner tier
 2. Lago customer created automatically
-3. Trial credits provided (5-10 ideas)
+3. Trial credits provided (5 ideas)
 4. Upgrade prompts after hitting limits
 
 ### **Usage Tracking**
@@ -200,6 +192,5 @@ interface UserProfile {
 
 ### **Low Priority**
 1. Advanced billing features (proration, discounts)
-2. Custom project workflow
-3. Advanced analytics and reporting
-4. Multi-currency support
+2. Advanced analytics and reporting
+3. Multi-currency support
